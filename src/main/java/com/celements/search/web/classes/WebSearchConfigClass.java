@@ -71,6 +71,9 @@ public class WebSearchConfigClass extends AbstractClassDefinition implements
   public static ClassField<String> FIELD_RESULT_ITEM_RENDER_SCRIPT = new StringField.Builder(
       CLASS_DEF_HINT, "resultItemRenderScript").build();
 
+  public static ClassField<Boolean> FIELD_ADVANCED_SEARCH = new BooleanField.Builder(CLASS_DEF_HINT,
+      "advancedSearch").displayType("yesno").build();
+
   @Override
   public String getName() {
     return CLASS_DEF_HINT;

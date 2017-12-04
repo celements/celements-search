@@ -277,14 +277,23 @@ public class LuceneSearchScriptService implements ScriptService {
 
   public LuceneSearchResult webSearch(String searchTerm, DocumentReference configDocRef,
       List<String> languages) {
+    return webSearch(searchTerm, configDocRef, languages, null);
+  }
+
+  public LuceneSearchResult webSearch(String searchTerm, DocumentReference configDocRef,
+      List<String> languages, List<String> sortFields) {
+    System.out.println("<<<<<<<<<<<<<<<< webSearch searchTerm: [" + searchTerm + "] configDocRef: ["
+        + configDocRef + "] languages: [" + languages + "] sortFields: [" + sortFields + "]");
     LuceneSearchResult ret = null;
     try {
       WebSearchQueryBuilder builder = createWebSearchBuilder(configDocRef);
       if (builder != null) {
         builder.setSearchTerm(searchTerm);
         LuceneQuery query = builder.build();
-        List<String> sortFields = modelAccess.getFieldValue(builder.getConfigDocRef(),
-            WebSearchConfigClass.FIELD_SORT_FIELDS).orNull();
+        if ((sortFields == null) || (sortFields.size() <= 0)) {
+          sortFields = modelAccess.getFieldValue(builder.getConfigDocRef(),
+              WebSearchConfigClass.FIELD_SORT_FIELDS).orNull();
+        }
         ret = searchService.search(query, sortFields, languages);
       }
     } catch (DocumentNotExistsException exc) {
