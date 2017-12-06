@@ -72,7 +72,7 @@ public class WebSearchConfigClass extends AbstractClassDefinition implements
       CLASS_DEF_HINT, "resultItemRenderScript").build();
 
   public static ClassField<Boolean> FIELD_ADVANCED_SEARCH = new BooleanField.Builder(CLASS_DEF_HINT,
-      "advancedSearch").displayType("yesno").build();
+      "advancedSearch").displayType("yesno").defaultValue(0).build();
 
   @Override
   public String getName() {
