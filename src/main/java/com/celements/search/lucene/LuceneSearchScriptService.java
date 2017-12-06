@@ -282,8 +282,6 @@ public class LuceneSearchScriptService implements ScriptService {
 
   public LuceneSearchResult webSearch(String searchTerm, DocumentReference configDocRef,
       List<String> languages, List<String> sortFields) {
-    System.out.println("<<<<<<<<<<<<<<<< webSearch searchTerm: [" + searchTerm + "] configDocRef: ["
-        + configDocRef + "] languages: [" + languages + "] sortFields: [" + sortFields + "]");
     LuceneSearchResult ret = null;
     try {
       WebSearchQueryBuilder builder = createWebSearchBuilder(configDocRef);
