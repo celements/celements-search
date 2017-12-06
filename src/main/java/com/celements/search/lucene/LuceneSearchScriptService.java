@@ -294,9 +294,6 @@ public class LuceneSearchScriptService implements ScriptService {
         }
         sortFields.addAll(modelAccess.getFieldValue(builder.getConfigDocRef(),
             WebSearchConfigClass.FIELD_SORT_FIELDS).orNull());
-        System.out.println("<<<<<<<<<<<<<<<< webSearch searchTerm: [" + searchTerm
-            + "] configDocRef: [" + configDocRef + "] languages: [" + languages + "] sortFields: ["
-            + sortFields + "]");
         ret = searchService.search(query, sortFields, languages);
       }
     } catch (DocumentNotExistsException exc) {
