@@ -1,6 +1,7 @@
 package com.celements.search.lucene;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -293,7 +294,7 @@ public class LuceneSearchScriptService implements ScriptService {
           sortFields = new ArrayList<String>();
         }
         sortFields.addAll(modelAccess.getFieldValue(builder.getConfigDocRef(),
-            WebSearchConfigClass.FIELD_SORT_FIELDS).orNull());
+            WebSearchConfigClass.FIELD_SORT_FIELDS).or(Collections.<String>emptyList()));
         ret = searchService.search(query, sortFields, languages);
       }
     } catch (DocumentNotExistsException exc) {
