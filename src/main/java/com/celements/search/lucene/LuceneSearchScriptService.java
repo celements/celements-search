@@ -1,5 +1,6 @@
 package com.celements.search.lucene;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -288,10 +289,14 @@ public class LuceneSearchScriptService implements ScriptService {
       if (builder != null) {
         builder.setSearchTerm(searchTerm);
         LuceneQuery query = builder.build();
-        if ((sortFields == null) || (sortFields.size() <= 0)) {
-          sortFields = modelAccess.getFieldValue(builder.getConfigDocRef(),
-              WebSearchConfigClass.FIELD_SORT_FIELDS).orNull();
+        if (sortFields == null) {
+          sortFields = new ArrayList<String>();
         }
+        sortFields.addAll(modelAccess.getFieldValue(builder.getConfigDocRef(),
+            WebSearchConfigClass.FIELD_SORT_FIELDS).orNull());
+        System.out.println("<<<<<<<<<<<<<<<< webSearch searchTerm: [" + searchTerm
+            + "] configDocRef: [" + configDocRef + "] languages: [" + languages + "] sortFields: ["
+            + sortFields + "]");
         ret = searchService.search(query, sortFields, languages);
       }
     } catch (DocumentNotExistsException exc) {
