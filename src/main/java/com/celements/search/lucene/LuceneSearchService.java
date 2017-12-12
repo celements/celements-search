@@ -392,7 +392,6 @@ public class LuceneSearchService implements ILuceneSearchService {
     }
     sortFields.addAll(modelAccess.getFieldValue(builder.getConfigDocRef(),
         WebSearchConfigClass.FIELD_SORT_FIELDS).or(Collections.<String>emptyList()));
-    System.out.println("<<<<<<<<<<<<<<<<<<<<<<< LuceneSearchService webSearch query: " + query);
     return search(query, sortFields, languages);
   }
 
