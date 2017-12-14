@@ -150,7 +150,7 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
   public Collection<WebSearchPackage> getPackages() {
     Set<WebSearchPackage> ret = new LinkedHashSet<>();
     ret.addAll(activatedPackages);
-    ret.addAll(webSearchService.getAvailablePackages(getConfigDocRef()));
+    ret.addAll(webSearchService.getAvailablePackages(getConfigDocRef(), ret));
     checkState(!ret.isEmpty(), "no WebSearchPackages defined");
     return ret;
   }

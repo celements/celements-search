@@ -1,11 +1,13 @@
 package com.celements.search.web;
 
-import static com.google.common.base.Preconditions.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.model.reference.DocumentReference;
@@ -22,9 +24,13 @@ import com.celements.search.web.classes.WebSearchConfigClass;
 import com.celements.search.web.packages.WebSearchPackage;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.web.Utils;
 
 @Component
 public class WebSearchService implements IWebSearchService {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(WebSearchService.class);
 
   @Requirement
   private IModelAccessFacade modelAccess;
@@ -33,10 +39,7 @@ public class WebSearchService implements IWebSearchService {
   private IRightsAccessFacadeRole rightsAccess;
 
   @Requirement
-  private WebSearchQueryBuilder queryBuilder;
-
-  @Requirement
-  ILuceneSearchService luceneSearchService;
+  private ILuceneSearchService luceneSearchService;
 
   @Requirement
   private List<WebSearchPackage> webSearchPackages;
@@ -45,33 +48,45 @@ public class WebSearchService implements IWebSearchService {
   private ModelContext context;
 
   @Override
-  public List<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef) {
-    List<WebSearchPackage> ret = new ArrayList<>();
-    ret.addAll(getConfiguredPackages());
-    if (ret.isEmpty()) {
-      ret.addAll(getDefaultPackages());
-    }
-    ret.addAll(getRequiredPackages());
-    checkState(!ret.isEmpty(), "no WebSearchPackages defined");
-    return ret;
+  public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef) {
+    return getAvailablePackages(configDocRef, new LinkedHashSet<WebSearchPackage>());
   }
 
-  private List<WebSearchPackage> getConfiguredPackages() {
-    return modelAccess.getFieldValue(queryBuilder.getConfigDoc(),
+  @Override
+  public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef,
+      Set<WebSearchPackage> searchPackages) {
+    try {
+      searchPackages.addAll(getConfiguredPackages(configDocRef));
+      if (searchPackages.isEmpty()) {
+        searchPackages.addAll(getDefaultPackages(configDocRef));
+      }
+      searchPackages.addAll(getRequiredPackages(configDocRef));
+    } catch (DocumentNotExistsException exp) {
+      LOGGER.error("Failed to load configDoc '{}'", configDocRef, exp);
+    }
+    return searchPackages;
+  }
+
+  private List<WebSearchPackage> getConfiguredPackages(DocumentReference configDocRef)
+      throws DocumentNotExistsException {
+    return modelAccess.getFieldValue(modelAccess.getDocument(configDocRef),
         WebSearchConfigClass.FIELD_PACKAGES).orNull();
   }
 
-  private List<WebSearchPackage> getDefaultPackages() {
+  private List<WebSearchPackage> getDefaultPackages(DocumentReference configDocRef) {
     return FluentIterable.from(webSearchPackages).filter(
         WebSearchPackage.PREDICATE_DEFAULT).toList();
   }
 
-  private List<WebSearchPackage> getRequiredPackages() {
+  private List<WebSearchPackage> getRequiredPackages(DocumentReference configDocRef)
+      throws DocumentNotExistsException {
+    final XWikiDocument configDoc = modelAccess.getDocument(configDocRef);
+
     return FluentIterable.from(webSearchPackages).filter(new Predicate<WebSearchPackage>() {
 
       @Override
       public boolean apply(WebSearchPackage searchPackage) {
-        return searchPackage.isRequired(queryBuilder.getConfigDoc());
+        return searchPackage.isRequired(configDoc);
       }
     }).toList();
   }
@@ -79,10 +94,12 @@ public class WebSearchService implements IWebSearchService {
   @Override
   public WebSearchQueryBuilder createWebSearchBuilder(DocumentReference configDocRef)
       throws DocumentNotExistsException {
+    WebSearchQueryBuilder ret = null;
+    ret = Utils.getComponent(WebSearchQueryBuilder.class);
     if ((configDocRef != null) && rightsAccess.hasAccessLevel(configDocRef, EAccessLevel.VIEW)) {
-      queryBuilder.setConfigDoc(modelAccess.getDocument(configDocRef));
+      ret.setConfigDoc(modelAccess.getDocument(configDocRef));
     }
-    return queryBuilder;
+    return ret;
   }
 
   @Override

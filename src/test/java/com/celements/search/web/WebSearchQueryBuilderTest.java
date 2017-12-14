@@ -1,6 +1,7 @@
 package com.celements.search.web;
 
 import static com.celements.common.test.CelementsTestUtils.*;
+import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
 
 import java.text.MessageFormat;
@@ -19,8 +20,10 @@ import com.celements.search.web.packages.AttachmentWebSearchPackage;
 import com.celements.search.web.packages.ContentWebSearchPackage;
 import com.celements.search.web.packages.MenuWebSearchPackage;
 import com.celements.search.web.packages.WebSearchPackage;
+import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.store.XWikiStoreInterface;
 import com.xpn.xwiki.web.Utils;
 
 public class WebSearchQueryBuilderTest extends AbstractComponentTest {
@@ -41,17 +44,22 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
     builder = Utils.getComponent(WebSearchQueryBuilder.class);
   }
 
-  @Test
-  public void test_loadIWebSearchService() {
-    IWebSearchService searchService = Utils.getComponent(IWebSearchService.class);
-    System.out.println(
-        "<<<<<<<<<<<<<<< WebSearchQueryBuilderTest test_loadIWebSearchService searchService: "
-            + searchService);
+  private void expectStoreMethods() throws XWikiException {
+    XWikiStoreInterface store = createMockAndAddToDefault(XWikiStoreInterface.class);
+    expect(getWikiMock().getStore()).andReturn(store).anyTimes();
+    XWikiDocument userDoc = new XWikiDocument(docRef);
+    expect(store.exists(eq(userDoc), same(getContext()))).andReturn(true).anyTimes();
+    expect(store.loadXWikiDoc(eq(userDoc), same(getContext()))).andReturn(userDoc).anyTimes();
+    DocumentReference xwPrefRef = new DocumentReference(getContext().getDatabase(), "XWiki",
+        "XWikiPreferences");
+    expect(getWikiMock().getDocument(eq(xwPrefRef), same(getContext()))).andReturn(
+        new XWikiDocument(xwPrefRef)).anyTimes();
   }
 
   @Test
-  public void test_getPackages_default() {
+  public void test_getPackages_default() throws XWikiException {
     builder.setConfigDoc(createCfDoc(docRef, false));
+    expectStoreMethods();
 
     replayDefault();
     Collection<WebSearchPackage> ret = builder.getPackages();
@@ -64,8 +72,9 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   }
 
   @Test
-  public void test_addPackage() {
+  public void test_addPackage() throws Exception {
     builder.setConfigDoc(createCfDoc(docRef, false));
+    expectStoreMethods();
     WebSearchPackage webPackage = Utils.getComponent(WebSearchPackage.class,
         AttachmentWebSearchPackage.NAME);
     builder.addPackage(webPackage);
@@ -81,6 +90,7 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   @Test
   public void test_build_noTerm() throws Exception {
     builder.setConfigDoc(createCfDoc(docRef, false));
+    expectStoreMethods();
 
     replayDefault();
     LuceneQuery query = builder.build();
@@ -92,6 +102,7 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
 
   @Test
   public void test_build_content() throws Exception {
+    expectStoreMethods();
     String searchTerm = "welt";
     builder.setConfigDoc(createCfDoc(docRef, false));
     builder.setSearchTerm(searchTerm);
@@ -102,12 +113,13 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
     verifyDefault();
 
     assertNotNull(query);
-    assertEquals(builder.getPackages().size(), 1);
+    assertEquals(1, builder.getPackages().size());
     assertEquals(buildQueryString(QUERY_CONTENT, searchTerm), query.getQueryString());
   }
 
   @Test
   public void test_build_menu() throws Exception {
+    expectStoreMethods();
     String searchTerm = "welt";
     builder.setConfigDoc(createCfDoc(docRef, false));
     builder.setSearchTerm(searchTerm);
@@ -118,12 +130,13 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
     verifyDefault();
 
     assertNotNull(query);
-    assertEquals(builder.getPackages().size(), 1);
+    assertEquals(1, builder.getPackages().size());
     assertEquals(buildQueryString(QUERY_MENU, searchTerm), query.getQueryString());
   }
 
   @Test
   public void test_build_attachment() throws Exception {
+    expectStoreMethods();
     String searchTerm = "welt";
     builder.setConfigDoc(createCfDoc(docRef, false));
     builder.setSearchTerm(searchTerm);
@@ -134,12 +147,13 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
     verifyDefault();
 
     assertNotNull(query);
-    assertEquals(builder.getPackages().size(), 1);
+    assertEquals(1, builder.getPackages().size());
     assertEquals(buildQueryString(QUERY_ATTACHMENT, searchTerm), query.getQueryString());
   }
 
   @Test
-  public void test_build_linkedDocsOnly() {
+  public void test_build_linkedDocsOnly() throws Exception {
+    expectStoreMethods();
     String searchTerm = "welt";
     builder.setConfigDoc(createCfDoc(docRef, true));
     builder.setSearchTerm(searchTerm);
