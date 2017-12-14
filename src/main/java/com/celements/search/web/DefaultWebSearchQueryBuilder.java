@@ -45,7 +45,6 @@ import com.celements.search.web.classes.WebSearchConfigClass;
 import com.celements.search.web.packages.WebSearchPackage;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -80,6 +79,9 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
   private IModelAccessFacade modelAccess;
 
   @Requirement
+  private IWebSearchService webSearchService;
+
+  @Requirement
   private ModelUtils modelUtils;
 
   @Requirement
@@ -109,7 +111,8 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
     return null;
   }
 
-  private XWikiDocument getConfigDoc() {
+  @Override
+  public XWikiDocument getConfigDoc() {
     if (configDoc == null) {
       configDoc = getDefaultConfigDoc();
     }
@@ -147,32 +150,9 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
   public Collection<WebSearchPackage> getPackages() {
     Set<WebSearchPackage> ret = new LinkedHashSet<>();
     ret.addAll(activatedPackages);
-    ret.addAll(getConfiguredPackages());
-    if (ret.isEmpty()) {
-      ret.addAll(getDefaultPackages());
-    }
-    ret.addAll(getRequiredPackages());
+    ret.addAll(webSearchService.getAvailablePackages(getConfigDocRef()));
     checkState(!ret.isEmpty(), "no WebSearchPackages defined");
     return ret;
-  }
-
-  private List<WebSearchPackage> getRequiredPackages() {
-    return FluentIterable.from(webSearchPackages).filter(new Predicate<WebSearchPackage>() {
-
-      @Override
-      public boolean apply(WebSearchPackage searchPackage) {
-        return searchPackage.isRequired(getConfigDoc());
-      }
-    }).toList();
-  }
-
-  private List<WebSearchPackage> getDefaultPackages() {
-    return FluentIterable.from(webSearchPackages).filter(
-        WebSearchPackage.PREDICATE_DEFAULT).toList();
-  }
-
-  private List<WebSearchPackage> getConfiguredPackages() {
-    return modelAccess.getFieldValue(getConfigDoc(), WebSearchConfigClass.FIELD_PACKAGES).orNull();
   }
 
   @Override

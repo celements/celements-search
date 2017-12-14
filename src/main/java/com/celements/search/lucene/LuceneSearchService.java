@@ -4,7 +4,6 @@ import static com.celements.search.lucene.LuceneUtils.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -33,7 +32,6 @@ import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
-import com.celements.rights.access.EAccessLevel;
 import com.celements.rights.access.IRightsAccessFacadeRole;
 import com.celements.search.lucene.query.IQueryRestriction;
 import com.celements.search.lucene.query.LuceneDocType;
@@ -42,15 +40,12 @@ import com.celements.search.lucene.query.QueryRestriction;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.celements.search.lucene.query.QueryRestrictionString;
-import com.celements.search.web.WebSearchQueryBuilder;
-import com.celements.search.web.classes.WebSearchConfigClass;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.IndexFields;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
-import com.xpn.xwiki.web.Utils;
 
 @Component
 public class LuceneSearchService implements ILuceneSearchService {
@@ -364,35 +359,6 @@ public class LuceneSearchService implements ILuceneSearchService {
   private LucenePlugin getLucenePlugin() {
     return (LucenePlugin) context.getXWikiContext().getWiki().getPlugin("lucene",
         context.getXWikiContext());
-  }
-
-  @Override
-  public WebSearchQueryBuilder createWebSearchBuilder(DocumentReference configDocRef)
-      throws DocumentNotExistsException {
-    WebSearchQueryBuilder ret = null;
-    ret = Utils.getComponent(WebSearchQueryBuilder.class);
-    if ((configDocRef != null) && rightsAccess.hasAccessLevel(configDocRef, EAccessLevel.VIEW)) {
-      ret.setConfigDoc(modelAccess.getDocument(configDocRef));
-    }
-    return ret;
-  }
-
-  @Override
-  public LuceneSearchResult webSearch(String searchTerm, DocumentReference configDocRef,
-      List<String> languages, List<String> sortFields, QueryRestrictionGroup restrGroup)
-          throws DocumentNotExistsException {
-    WebSearchQueryBuilder builder = createWebSearchBuilder(configDocRef);
-    builder.setSearchTerm(searchTerm);
-    LuceneQuery query = builder.build();
-    if ((restrGroup != null) && !restrGroup.isEmpty()) {
-      query.add(restrGroup);
-    }
-    if (sortFields == null) {
-      sortFields = new ArrayList<String>();
-    }
-    sortFields.addAll(modelAccess.getFieldValue(builder.getConfigDocRef(),
-        WebSearchConfigClass.FIELD_SORT_FIELDS).or(Collections.<String>emptyList()));
-    return search(query, sortFields, languages);
   }
 
 }

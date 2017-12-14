@@ -5,9 +5,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.util.Version;
 import org.xwiki.component.annotation.ComponentRole;
@@ -25,7 +22,6 @@ import com.celements.search.lucene.query.QueryRestriction;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.celements.search.lucene.query.QueryRestrictionString;
-import com.celements.search.web.WebSearchQueryBuilder;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.IndexFields;
 
@@ -154,15 +150,5 @@ public interface ILuceneSearchService {
    */
   @Deprecated
   public void queueForIndexing(XWikiDocument doc);
-
-  @NotNull
-  public LuceneSearchResult webSearch(@NotNull String searchTerm,
-      @Nullable DocumentReference configDocRef, @Nullable List<String> languages,
-      @Nullable List<String> sortFields, @Nullable QueryRestrictionGroup restrGroup)
-          throws DocumentNotExistsException;
-
-  @NotNull
-  public WebSearchQueryBuilder createWebSearchBuilder(@Nullable DocumentReference configDocRef)
-      throws DocumentNotExistsException;
 
 }

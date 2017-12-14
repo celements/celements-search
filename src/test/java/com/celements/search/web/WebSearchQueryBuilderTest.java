@@ -42,6 +42,14 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   }
 
   @Test
+  public void test_loadIWebSearchService() {
+    IWebSearchService searchService = Utils.getComponent(IWebSearchService.class);
+    System.out.println(
+        "<<<<<<<<<<<<<<< WebSearchQueryBuilderTest test_loadIWebSearchService searchService: "
+            + searchService);
+  }
+
+  @Test
   public void test_getPackages_default() {
     builder.setConfigDoc(createCfDoc(docRef, false));
 

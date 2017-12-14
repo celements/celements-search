@@ -14,14 +14,12 @@ import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.script.service.ScriptService;
 
 import com.celements.model.access.exception.DocumentAccessException;
-import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
 import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.search.lucene.query.QueryRestriction;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
-import com.celements.search.web.WebSearchQueryBuilder;
 import com.celements.web.service.IWebUtilsService;
 import com.google.common.base.MoreObjects;
 
@@ -247,39 +245,6 @@ public class LuceneSearchScriptService implements ScriptService {
       indexService.optimizeIndex();
       ret = true;
     }
-    return ret;
-  }
-
-  public WebSearchQueryBuilder createWebSearchBuilder(DocumentReference configDocRef) {
-    WebSearchQueryBuilder ret = null;
-    try {
-      ret = searchService.createWebSearchBuilder(configDocRef);
-    } catch (DocumentNotExistsException exc) {
-      LOGGER.info("createWebSearchBuilder: provided configDoc '{}' doesn't exist", configDocRef);
-    }
-    LOGGER.debug("createWebSearchBuilder: returning '{}'", ret);
-    return ret;
-  }
-
-  public LuceneSearchResult webSearch(String searchTerm, DocumentReference configDocRef,
-      List<String> languages) {
-    return webSearch(searchTerm, configDocRef, languages, null);
-  }
-
-  public LuceneSearchResult webSearch(String searchTerm, DocumentReference configDocRef,
-      List<String> languages, List<String> sortFields) {
-    return webSearch(searchTerm, configDocRef, languages, sortFields, null);
-  }
-
-  public LuceneSearchResult webSearch(String searchTerm, DocumentReference configDocRef,
-      List<String> languages, List<String> sortFields, QueryRestrictionGroup restrGroup) {
-    LuceneSearchResult ret = null;
-    try {
-      ret = searchService.webSearch(searchTerm, configDocRef, languages, sortFields, restrGroup);
-    } catch (DocumentNotExistsException exc) {
-      LOGGER.info("webSearch: provided configDoc '{}' doesn't exist", configDocRef);
-    }
-    LOGGER.debug("webSearch: returning '{}'", ret);
     return ret;
   }
 
