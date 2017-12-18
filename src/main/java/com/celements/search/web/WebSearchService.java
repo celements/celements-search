@@ -108,7 +108,6 @@ public class WebSearchService implements IWebSearchService {
           throws DocumentNotExistsException {
     WebSearchQueryBuilder builder = createWebSearchBuilder(configDocRef);
     builder.setSearchTerm(searchTerm);
-    LuceneQuery query = builder.build();
     for (WebSearchPackage searchPackage : activatedPackages) {
       builder.addPackage(searchPackage);
     }
@@ -117,6 +116,7 @@ public class WebSearchService implements IWebSearchService {
     }
     sortFields.addAll(modelAccess.getFieldValue(builder.getConfigDocRef(),
         WebSearchConfigClass.FIELD_SORT_FIELDS).or(Collections.<String>emptyList()));
+    LuceneQuery query = builder.build();
     return luceneSearchService.search(query, sortFields, languages);
   }
 

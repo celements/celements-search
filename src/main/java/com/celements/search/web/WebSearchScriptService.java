@@ -21,13 +21,10 @@ public class WebSearchScriptService implements ScriptService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebSearchScriptService.class);
 
-  public static final String NAME = "websearch";
+  public static final String NAME = "celwebsearch";
 
   @Requirement
   private IWebSearchService searchService;
-
-  @Requirement
-  private WebSearchPackage searchPackage;
 
   public WebSearchQueryBuilder createWebSearchBuilder(DocumentReference configDocRef) {
     WebSearchQueryBuilder ret = null;
