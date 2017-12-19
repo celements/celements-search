@@ -15,7 +15,6 @@ import org.xwiki.model.reference.ClassReference;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.celements.common.test.AbstractComponentTest;
-import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.classes.ClassDefinition;
 import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.search.web.classes.WebSearchConfigClass;
@@ -38,14 +37,12 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
 
   private DocumentReference docRef;
   private WebSearchQueryBuilder builder;
-  private IModelAccessFacade modelAccessMock;
   private IWebSearchService webSearchServiceMock;
 
   @Before
   public void prepareTest() throws Exception {
     docRef = new DocumentReference("wiki", "space", "doc");
     getContext().setDatabase(docRef.getWikiReference().getName());
-    // modelAccessMock = registerComponentMock(IModelAccessFacade.class);
     webSearchServiceMock = registerComponentMock(IWebSearchService.class);
     builder = Utils.getComponent(WebSearchQueryBuilder.class);
   }
@@ -73,7 +70,6 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   @Test
   public void test_addPackage() throws Exception {
     builder.setConfigDoc(createCfDoc(docRef, false));
-    // expectStoreMethods();
     WebSearchPackage webPackage = Utils.getComponent(WebSearchPackage.class,
         AttachmentWebSearchPackage.NAME);
     builder.addPackage(webPackage);
@@ -88,8 +84,7 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
 
   @Test
   public void test_build_noTerm() throws Exception {
-    XWikiDocument doc = createCfDoc(docRef, false);
-    builder.setConfigDoc(doc);
+    builder.setConfigDoc(createCfDoc(docRef, false));
     Set<WebSearchPackage> webSearchPackage = ImmutableSet.<WebSearchPackage>of(Utils.getComponent(
         WebSearchPackage.class, MenuWebSearchPackage.NAME), Utils.getComponent(
             WebSearchPackage.class, ContentWebSearchPackage.NAME));
@@ -107,9 +102,8 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   @Test
   public void test_build_content() throws Exception {
     String searchTerm = "welt";
-    XWikiDocument doc = createCfDoc(docRef, false);
 
-    builder.setConfigDoc(doc);
+    builder.setConfigDoc(createCfDoc(docRef, false));
     builder.setSearchTerm(searchTerm);
     builder.addPackage(ContentWebSearchPackage.NAME);
 
@@ -125,9 +119,8 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   @Test
   public void test_build_menu() throws Exception {
     String searchTerm = "welt";
-    XWikiDocument doc = createCfDoc(docRef, false);
 
-    builder.setConfigDoc(doc);
+    builder.setConfigDoc(createCfDoc(docRef, false));
     builder.setSearchTerm(searchTerm);
     builder.addPackage(MenuWebSearchPackage.NAME);
 
@@ -143,9 +136,8 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   @Test
   public void test_build_attachment() throws Exception {
     String searchTerm = "welt";
-    XWikiDocument doc = createCfDoc(docRef, false);
 
-    builder.setConfigDoc(doc);
+    builder.setConfigDoc(createCfDoc(docRef, false));
     builder.setSearchTerm(searchTerm);
     builder.addPackage(AttachmentWebSearchPackage.NAME);
 
@@ -161,7 +153,7 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   @Test
   public void test_build_linkedDocsOnly() throws Exception {
     String searchTerm = "welt";
-    builder.setConfigDoc(createCfDoc(docRef, false));
+    builder.setConfigDoc(createCfDoc(docRef, true));
     builder.setSearchTerm(searchTerm);
     builder.addPackage(MenuWebSearchPackage.NAME);
     builder.addPackage(ContentWebSearchPackage.NAME);
