@@ -6,6 +6,8 @@ import static org.junit.Assert.*;
 
 import java.text.MessageFormat;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -13,6 +15,7 @@ import org.xwiki.model.reference.ClassReference;
 import org.xwiki.model.reference.DocumentReference;
 
 import com.celements.common.test.AbstractComponentTest;
+import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.classes.ClassDefinition;
 import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.search.web.classes.WebSearchConfigClass;
@@ -20,10 +23,9 @@ import com.celements.search.web.packages.AttachmentWebSearchPackage;
 import com.celements.search.web.packages.ContentWebSearchPackage;
 import com.celements.search.web.packages.MenuWebSearchPackage;
 import com.celements.search.web.packages.WebSearchPackage;
-import com.xpn.xwiki.XWikiException;
+import com.google.common.collect.ImmutableSet;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
-import com.xpn.xwiki.store.XWikiStoreInterface;
 import com.xpn.xwiki.web.Utils;
 
 public class WebSearchQueryBuilderTest extends AbstractComponentTest {
@@ -36,30 +38,27 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
 
   private DocumentReference docRef;
   private WebSearchQueryBuilder builder;
+  private IModelAccessFacade modelAccessMock;
+  private IWebSearchService webSearchServiceMock;
 
   @Before
   public void prepareTest() throws Exception {
     docRef = new DocumentReference("wiki", "space", "doc");
     getContext().setDatabase(docRef.getWikiReference().getName());
+    // modelAccessMock = registerComponentMock(IModelAccessFacade.class);
+    webSearchServiceMock = registerComponentMock(IWebSearchService.class);
     builder = Utils.getComponent(WebSearchQueryBuilder.class);
   }
 
-  private void expectStoreMethods() throws XWikiException {
-    XWikiStoreInterface store = createMockAndAddToDefault(XWikiStoreInterface.class);
-    expect(getWikiMock().getStore()).andReturn(store).anyTimes();
-    XWikiDocument userDoc = new XWikiDocument(docRef);
-    expect(store.exists(eq(userDoc), same(getContext()))).andReturn(true).anyTimes();
-    expect(store.loadXWikiDoc(eq(userDoc), same(getContext()))).andReturn(userDoc).anyTimes();
-    DocumentReference xwPrefRef = new DocumentReference(getContext().getDatabase(), "XWiki",
-        "XWikiPreferences");
-    expect(getWikiMock().getDocument(eq(xwPrefRef), same(getContext()))).andReturn(
-        new XWikiDocument(xwPrefRef)).anyTimes();
-  }
-
   @Test
-  public void test_getPackages_default() throws XWikiException {
+  public void test_getPackages_default() throws Exception {
     builder.setConfigDoc(createCfDoc(docRef, false));
-    expectStoreMethods();
+
+    Set<WebSearchPackage> webSearchPackage = ImmutableSet.<WebSearchPackage>of(Utils.getComponent(
+        WebSearchPackage.class, MenuWebSearchPackage.NAME), Utils.getComponent(
+            WebSearchPackage.class, ContentWebSearchPackage.NAME));
+    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef(),
+        new LinkedHashSet<WebSearchPackage>())).andReturn(webSearchPackage).atLeastOnce();
 
     replayDefault();
     Collection<WebSearchPackage> ret = builder.getPackages();
@@ -74,7 +73,7 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   @Test
   public void test_addPackage() throws Exception {
     builder.setConfigDoc(createCfDoc(docRef, false));
-    expectStoreMethods();
+    // expectStoreMethods();
     WebSearchPackage webPackage = Utils.getComponent(WebSearchPackage.class,
         AttachmentWebSearchPackage.NAME);
     builder.addPackage(webPackage);
@@ -89,8 +88,13 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
 
   @Test
   public void test_build_noTerm() throws Exception {
-    builder.setConfigDoc(createCfDoc(docRef, false));
-    expectStoreMethods();
+    XWikiDocument doc = createCfDoc(docRef, false);
+    builder.setConfigDoc(doc);
+    Set<WebSearchPackage> webSearchPackage = ImmutableSet.<WebSearchPackage>of(Utils.getComponent(
+        WebSearchPackage.class, MenuWebSearchPackage.NAME), Utils.getComponent(
+            WebSearchPackage.class, ContentWebSearchPackage.NAME));
+    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef(),
+        new LinkedHashSet<WebSearchPackage>())).andReturn(webSearchPackage).atLeastOnce();
 
     replayDefault();
     LuceneQuery query = builder.build();
@@ -102,9 +106,10 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
 
   @Test
   public void test_build_content() throws Exception {
-    expectStoreMethods();
     String searchTerm = "welt";
-    builder.setConfigDoc(createCfDoc(docRef, false));
+    XWikiDocument doc = createCfDoc(docRef, false);
+
+    builder.setConfigDoc(doc);
     builder.setSearchTerm(searchTerm);
     builder.addPackage(ContentWebSearchPackage.NAME);
 
@@ -119,9 +124,10 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
 
   @Test
   public void test_build_menu() throws Exception {
-    expectStoreMethods();
     String searchTerm = "welt";
-    builder.setConfigDoc(createCfDoc(docRef, false));
+    XWikiDocument doc = createCfDoc(docRef, false);
+
+    builder.setConfigDoc(doc);
     builder.setSearchTerm(searchTerm);
     builder.addPackage(MenuWebSearchPackage.NAME);
 
@@ -136,9 +142,10 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
 
   @Test
   public void test_build_attachment() throws Exception {
-    expectStoreMethods();
     String searchTerm = "welt";
-    builder.setConfigDoc(createCfDoc(docRef, false));
+    XWikiDocument doc = createCfDoc(docRef, false);
+
+    builder.setConfigDoc(doc);
     builder.setSearchTerm(searchTerm);
     builder.addPackage(AttachmentWebSearchPackage.NAME);
 
@@ -153,9 +160,8 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
 
   @Test
   public void test_build_linkedDocsOnly() throws Exception {
-    expectStoreMethods();
     String searchTerm = "welt";
-    builder.setConfigDoc(createCfDoc(docRef, true));
+    builder.setConfigDoc(createCfDoc(docRef, false));
     builder.setSearchTerm(searchTerm);
     builder.addPackage(MenuWebSearchPackage.NAME);
     builder.addPackage(ContentWebSearchPackage.NAME);

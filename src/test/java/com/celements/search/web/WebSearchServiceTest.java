@@ -25,7 +25,6 @@ import com.celements.search.web.packages.WebSearchPackage;
 import com.google.common.base.Optional;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
-import com.xpn.xwiki.store.XWikiStoreInterface;
 import com.xpn.xwiki.web.Utils;
 
 public class WebSearchServiceTest extends AbstractComponentTest {
@@ -36,42 +35,12 @@ public class WebSearchServiceTest extends AbstractComponentTest {
 
   private IModelAccessFacade modelAccessMock;
 
-  private XWikiStoreInterface store;
-
   @Before
   public void prepareTest() throws Exception {
     docRef = new DocumentReference("wiki", "space", "doc");
     getContext().setDatabase(docRef.getWikiReference().getName());
     modelAccessMock = registerComponentMock(IModelAccessFacade.class);
     searchService = Utils.getComponent(IWebSearchService.class);
-  }
-
-  private void expectStoreMethods(XWikiDocument doc) throws Exception {
-
-    // expect(modelAccessMock.getFieldValue(same(doc), eq(
-    // WebSearchConfigClass.FIELD_PACKAGES))).andReturn(Optional.of(Arrays.asList(
-    // Utils.getComponent(WebSearchPackage.class, ContentWebSearchPackage.NAME),
-    // Utils.getComponent(WebSearchPackage.class, MenuWebSearchPackage.NAME)))).times(33);
-    // expect(modelAccessMock.getXObject(doc, attClassRef.getDocRef())).andReturn(obj).anyTimes();
-
-    // ClassReference classRef = Utils.getComponent(ClassDefinition.class,
-    // WebSearchConfigClass.CLASS_DEF_HINT).getClassReference();
-    // obj = new BaseObject();
-    // obj.setXClassReference(classRef.getDocRef(docRef.getWikiReference()));
-    // obj.setStringValue("package", "content,menu");
-    // doc.addXObject(obj);
-    //
-    // expect(modelAccessMock.getFieldValue(same(doc), eq(
-    // WebSearchConfigClass.FIELD_PACKAGES))).andReturn(Optional.of(Arrays.asList(
-    // Utils.getComponent(WebSearchPackage.class, ContentWebSearchPackage.NAME),
-    // Utils.getComponent(WebSearchPackage.class, MenuWebSearchPackage.NAME)))).atLeastOnce();
-    // expect(modelAccessMock.getXObject(docRef,
-    // classRef.getDocRef())).andReturn(obj).atLeastOnce();
-
-    // DocumentReference xwPrefRef = new DocumentReference(getContext().getDatabase(), "XWiki",
-    // "XWikiPreferences");
-    // expect(getWikiMock().getDocument(eq(xwPrefRef), same(getContext()))).andReturn(
-    // new XWikiDocument(xwPrefRef)).anyTimes();
   }
 
   @Test

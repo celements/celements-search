@@ -56,7 +56,10 @@ public class WebSearchService implements IWebSearchService {
   public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef,
       Set<WebSearchPackage> searchPackages) {
     try {
-      searchPackages.addAll(getConfiguredPackages(configDocRef));
+      List<WebSearchPackage> configuredPackages = getConfiguredPackages(configDocRef);
+      if (configuredPackages != null) {
+        searchPackages.addAll(configuredPackages);
+      }
       if (searchPackages.isEmpty()) {
         searchPackages.addAll(getDefaultPackages(configDocRef));
       }
