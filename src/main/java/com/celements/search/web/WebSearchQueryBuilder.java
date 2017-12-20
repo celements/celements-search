@@ -22,8 +22,6 @@ public interface WebSearchQueryBuilder {
 
   public @NotNull DocumentReference getConfigDocRef();
 
-  public @NotNull XWikiDocument getConfigDoc();
-
   public @NotNull WebSearchQueryBuilder setConfigDoc(@NotNull XWikiDocument doc);
 
   public @NotNull String getSearchTerm();

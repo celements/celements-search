@@ -18,9 +18,6 @@ public interface IWebSearchService {
 
   public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef);
 
-  public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef,
-      Set<WebSearchPackage> searchPackages);
-
   @NotNull
   public WebSearchQueryBuilder createWebSearchBuilder(@Nullable DocumentReference configDocRef)
       throws DocumentNotExistsException;

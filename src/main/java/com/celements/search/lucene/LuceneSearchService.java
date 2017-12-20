@@ -27,12 +27,10 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 
-import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
-import com.celements.rights.access.IRightsAccessFacadeRole;
 import com.celements.search.lucene.query.IQueryRestriction;
 import com.celements.search.lucene.query.LuceneDocType;
 import com.celements.search.lucene.query.LuceneQuery;
@@ -66,12 +64,6 @@ public class LuceneSearchService implements ILuceneSearchService {
 
   @Requirement
   private ModelUtils modelUtils;
-
-  @Requirement
-  private IModelAccessFacade modelAccess;
-
-  @Requirement
-  private IRightsAccessFacadeRole rightsAccess;
 
   @Requirement
   private ModelContext context;

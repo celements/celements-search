@@ -2,7 +2,7 @@ package com.celements.search.web;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -49,19 +49,12 @@ public class WebSearchService implements IWebSearchService {
 
   @Override
   public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef) {
-    return getAvailablePackages(configDocRef, new LinkedHashSet<WebSearchPackage>());
-  }
-
-  @Override
-  public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef,
-      Set<WebSearchPackage> searchPackages) {
+    Set<WebSearchPackage> searchPackages = new HashSet<>();
     try {
-      List<WebSearchPackage> configuredPackages = getConfiguredPackages(configDocRef);
-      if (configuredPackages != null) {
-        searchPackages.addAll(configuredPackages);
-      }
+      XWikiDocument configDoc = modelAccess.getDocument(configDocRef);
+      searchPackages.addAll(getConfiguredPackages(configDoc));
       if (searchPackages.isEmpty()) {
-        searchPackages.addAll(getDefaultPackages(configDocRef));
+        searchPackages.addAll(getDefaultPackages());
       }
       searchPackages.addAll(getRequiredPackages(configDocRef));
     } catch (DocumentNotExistsException exp) {
@@ -70,13 +63,13 @@ public class WebSearchService implements IWebSearchService {
     return searchPackages;
   }
 
-  private List<WebSearchPackage> getConfiguredPackages(DocumentReference configDocRef)
+  private List<WebSearchPackage> getConfiguredPackages(XWikiDocument configDoc)
       throws DocumentNotExistsException {
-    return modelAccess.getFieldValue(modelAccess.getDocument(configDocRef),
-        WebSearchConfigClass.FIELD_PACKAGES).orNull();
+    return modelAccess.getFieldValue(configDoc, WebSearchConfigClass.FIELD_PACKAGES).or(
+        Collections.<WebSearchPackage>emptyList());
   }
 
-  private List<WebSearchPackage> getDefaultPackages(DocumentReference configDocRef) {
+  private List<WebSearchPackage> getDefaultPackages() {
     return FluentIterable.from(webSearchPackages).filter(
         WebSearchPackage.PREDICATE_DEFAULT).toList();
   }

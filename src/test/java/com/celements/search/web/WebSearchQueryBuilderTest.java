@@ -6,7 +6,6 @@ import static org.junit.Assert.*;
 
 import java.text.MessageFormat;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.Before;
@@ -54,8 +53,8 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
     Set<WebSearchPackage> webSearchPackage = ImmutableSet.<WebSearchPackage>of(Utils.getComponent(
         WebSearchPackage.class, MenuWebSearchPackage.NAME), Utils.getComponent(
             WebSearchPackage.class, ContentWebSearchPackage.NAME));
-    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef(),
-        new LinkedHashSet<WebSearchPackage>())).andReturn(webSearchPackage).atLeastOnce();
+    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef())).andReturn(
+        webSearchPackage).atLeastOnce();
 
     replayDefault();
     Collection<WebSearchPackage> ret = builder.getPackages();
@@ -70,26 +69,28 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   @Test
   public void test_addPackage() throws Exception {
     builder.setConfigDoc(createCfDoc(docRef, false));
-    WebSearchPackage webPackage = Utils.getComponent(WebSearchPackage.class,
+    WebSearchPackage webSearchPackage = Utils.getComponent(WebSearchPackage.class,
         AttachmentWebSearchPackage.NAME);
-    builder.addPackage(webPackage);
+    builder.addPackage(webSearchPackage);
+    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef())).andReturn(
+        ImmutableSet.<WebSearchPackage>of(webSearchPackage)).atLeastOnce();
 
     replayDefault();
     Collection<WebSearchPackage> ret = builder.getPackages();
     verifyDefault();
 
     assertEquals(1, ret.size());
-    assertTrue(ret.contains(webPackage));
+    assertTrue(ret.contains(webSearchPackage));
   }
 
   @Test
   public void test_build_noTerm() throws Exception {
     builder.setConfigDoc(createCfDoc(docRef, false));
-    Set<WebSearchPackage> webSearchPackage = ImmutableSet.<WebSearchPackage>of(Utils.getComponent(
+    Set<WebSearchPackage> webSearchPackages = ImmutableSet.<WebSearchPackage>of(Utils.getComponent(
         WebSearchPackage.class, MenuWebSearchPackage.NAME), Utils.getComponent(
             WebSearchPackage.class, ContentWebSearchPackage.NAME));
-    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef(),
-        new LinkedHashSet<WebSearchPackage>())).andReturn(webSearchPackage).atLeastOnce();
+    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef())).andReturn(
+        webSearchPackages).atLeastOnce();
 
     replayDefault();
     LuceneQuery query = builder.build();
@@ -106,6 +107,10 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
     builder.setConfigDoc(createCfDoc(docRef, false));
     builder.setSearchTerm(searchTerm);
     builder.addPackage(ContentWebSearchPackage.NAME);
+
+    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef())).andReturn(
+        ImmutableSet.<WebSearchPackage>of(Utils.getComponent(WebSearchPackage.class,
+            ContentWebSearchPackage.NAME))).atLeastOnce();
 
     replayDefault();
     LuceneQuery query = builder.build();
@@ -124,6 +129,10 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
     builder.setSearchTerm(searchTerm);
     builder.addPackage(MenuWebSearchPackage.NAME);
 
+    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef())).andReturn(
+        ImmutableSet.<WebSearchPackage>of(Utils.getComponent(WebSearchPackage.class,
+            MenuWebSearchPackage.NAME))).atLeastOnce();
+
     replayDefault();
     LuceneQuery query = builder.build();
     verifyDefault();
@@ -140,6 +149,10 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
     builder.setConfigDoc(createCfDoc(docRef, false));
     builder.setSearchTerm(searchTerm);
     builder.addPackage(AttachmentWebSearchPackage.NAME);
+
+    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef())).andReturn(
+        ImmutableSet.<WebSearchPackage>of(Utils.getComponent(WebSearchPackage.class,
+            AttachmentWebSearchPackage.NAME))).atLeastOnce();
 
     replayDefault();
     LuceneQuery query = builder.build();
@@ -158,6 +171,12 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
     builder.addPackage(MenuWebSearchPackage.NAME);
     builder.addPackage(ContentWebSearchPackage.NAME);
     builder.addPackage(AttachmentWebSearchPackage.NAME);
+
+    expect(webSearchServiceMock.getAvailablePackages(builder.getConfigDocRef())).andReturn(
+        ImmutableSet.<WebSearchPackage>of(Utils.getComponent(WebSearchPackage.class,
+            MenuWebSearchPackage.NAME), Utils.getComponent(WebSearchPackage.class,
+                ContentWebSearchPackage.NAME), Utils.getComponent(WebSearchPackage.class,
+                    AttachmentWebSearchPackage.NAME))).atLeastOnce();
 
     replayDefault();
     LuceneQuery query = builder.build();

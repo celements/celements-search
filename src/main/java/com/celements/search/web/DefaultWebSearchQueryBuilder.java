@@ -7,7 +7,7 @@ import static com.google.common.base.Preconditions.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -49,6 +49,7 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.IndexFields;
 import com.xpn.xwiki.web.Utils;
@@ -90,7 +91,7 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
   private WikiReference wikiRef;
   private XWikiDocument configDoc;
   private String searchTerm = "";
-  private List<WebSearchPackage> activatedPackages = new ArrayList<>();
+  private Set<WebSearchPackage> activatedPackages = new HashSet<>();
 
   @Override
   public WikiReference getWikiRef() {
@@ -111,8 +112,7 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
     return null;
   }
 
-  @Override
-  public XWikiDocument getConfigDoc() {
+  private XWikiDocument getConfigDoc() {
     if (configDoc == null) {
       configDoc = getDefaultConfigDoc();
     }
@@ -148,10 +148,10 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
 
   @Override
   public Collection<WebSearchPackage> getPackages() {
-    Set<WebSearchPackage> ret = new LinkedHashSet<>();
-    ret.addAll(activatedPackages);
-    if (ret.isEmpty()) {
-      ret.addAll(webSearchService.getAvailablePackages(getConfigDocRef(), ret));
+    Set<WebSearchPackage> ret = webSearchService.getAvailablePackages(
+        getConfigDoc().getDocumentReference());
+    if (!activatedPackages.isEmpty()) {
+      ret = Sets.intersection(ret, activatedPackages);
     }
     checkState(!ret.isEmpty(), "no WebSearchPackages defined");
     return ret;

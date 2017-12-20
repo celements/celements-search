@@ -21,7 +21,7 @@ public class WebSearchScriptService implements ScriptService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(WebSearchScriptService.class);
 
-  public static final String NAME = "celwebsearch";
+  public static final String NAME = "websearch";
 
   @Requirement
   private IWebSearchService searchService;
@@ -48,18 +48,22 @@ public class WebSearchScriptService implements ScriptService {
   }
 
   public LuceneSearchResult webSearch(String searchTerm, DocumentReference configDocRef,
-      List<String> activatedPackages, List<String> languages, List<String> sortFields) {
+      List<String> activatedPackageNames, List<String> languages, List<String> sortFields) {
     LuceneSearchResult ret = null;
-    List<WebSearchPackage> packages = new ArrayList<>();
-    for (String packageName : activatedPackages) {
-      try {
-        packages.add(Utils.getComponentManager().lookup(WebSearchPackage.class, packageName));
-      } catch (ComponentLookupException exc) {
-        LOGGER.info("addPackage: invalid package '{}'", packageName);
+    List<WebSearchPackage> activatedPackages = new ArrayList<>();
+    if (activatedPackageNames != null) {
+      for (String packageName : activatedPackageNames) {
+        try {
+          activatedPackages.add(Utils.getComponentManager().lookup(WebSearchPackage.class,
+              packageName));
+        } catch (ComponentLookupException exc) {
+          LOGGER.info("addPackage: invalid package '{}'", packageName);
+        }
       }
     }
     try {
-      ret = searchService.webSearch(searchTerm, configDocRef, packages, languages, sortFields);
+      ret = searchService.webSearch(searchTerm, configDocRef, activatedPackages, languages,
+          sortFields);
     } catch (DocumentNotExistsException exc) {
       LOGGER.info("webSearch: provided configDoc '{}' doesn't exist", configDocRef);
     }
