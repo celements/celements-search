@@ -2,7 +2,7 @@ package com.celements.search.web;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -15,8 +15,6 @@ import org.xwiki.model.reference.DocumentReference;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.context.ModelContext;
-import com.celements.rights.access.EAccessLevel;
-import com.celements.rights.access.IRightsAccessFacadeRole;
 import com.celements.search.lucene.ILuceneSearchService;
 import com.celements.search.lucene.LuceneSearchResult;
 import com.celements.search.lucene.query.LuceneQuery;
@@ -36,9 +34,6 @@ public class WebSearchService implements IWebSearchService {
   private IModelAccessFacade modelAccess;
 
   @Requirement
-  private IRightsAccessFacadeRole rightsAccess;
-
-  @Requirement
   private ILuceneSearchService luceneSearchService;
 
   @Requirement
@@ -49,16 +44,16 @@ public class WebSearchService implements IWebSearchService {
 
   @Override
   public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef) {
-    Set<WebSearchPackage> searchPackages = new HashSet<>();
+    Set<WebSearchPackage> searchPackages = new LinkedHashSet<>();
     try {
       XWikiDocument configDoc = modelAccess.getDocument(configDocRef);
       searchPackages.addAll(getConfiguredPackages(configDoc));
       if (searchPackages.isEmpty()) {
         searchPackages.addAll(getDefaultPackages());
       }
-      searchPackages.addAll(getRequiredPackages(configDocRef));
+      searchPackages.addAll(getRequiredPackages(configDoc));
     } catch (DocumentNotExistsException exp) {
-      LOGGER.error("Failed to load configDoc '{}'", configDocRef, exp);
+      LOGGER.warn("Failed to load configDoc '{}'", configDocRef, exp);
     }
     return searchPackages;
   }
@@ -74,15 +69,15 @@ public class WebSearchService implements IWebSearchService {
         WebSearchPackage.PREDICATE_DEFAULT).toList();
   }
 
-  private List<WebSearchPackage> getRequiredPackages(DocumentReference configDocRef)
+  private List<WebSearchPackage> getRequiredPackages(XWikiDocument configDoc)
       throws DocumentNotExistsException {
-    final XWikiDocument configDoc = modelAccess.getDocument(configDocRef);
+    final XWikiDocument configDocFinal = configDoc;
 
     return FluentIterable.from(webSearchPackages).filter(new Predicate<WebSearchPackage>() {
 
       @Override
       public boolean apply(WebSearchPackage searchPackage) {
-        return searchPackage.isRequired(configDoc);
+        return searchPackage.isRequired(configDocFinal);
       }
     }).toList();
   }
@@ -92,9 +87,7 @@ public class WebSearchService implements IWebSearchService {
       throws DocumentNotExistsException {
     WebSearchQueryBuilder ret = null;
     ret = Utils.getComponent(WebSearchQueryBuilder.class);
-    if ((configDocRef != null) && rightsAccess.hasAccessLevel(configDocRef, EAccessLevel.VIEW)) {
-      ret.setConfigDoc(modelAccess.getDocument(configDocRef));
-    }
+    ret.setConfigDoc(modelAccess.getDocument(configDocRef));
     return ret;
   }
 

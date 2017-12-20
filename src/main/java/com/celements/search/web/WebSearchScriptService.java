@@ -12,6 +12,8 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.script.service.ScriptService;
 
 import com.celements.model.access.exception.DocumentNotExistsException;
+import com.celements.rights.access.EAccessLevel;
+import com.celements.rights.access.IRightsAccessFacadeRole;
 import com.celements.search.lucene.LuceneSearchResult;
 import com.celements.search.web.packages.WebSearchPackage;
 import com.xpn.xwiki.web.Utils;
@@ -26,10 +28,15 @@ public class WebSearchScriptService implements ScriptService {
   @Requirement
   private IWebSearchService searchService;
 
+  @Requirement
+  private IRightsAccessFacadeRole rightsAccess;
+
   public WebSearchQueryBuilder createWebSearchBuilder(DocumentReference configDocRef) {
     WebSearchQueryBuilder ret = null;
     try {
-      ret = searchService.createWebSearchBuilder(configDocRef);
+      if ((configDocRef != null) && rightsAccess.hasAccessLevel(configDocRef, EAccessLevel.VIEW)) {
+        ret = searchService.createWebSearchBuilder(configDocRef);
+      }
     } catch (DocumentNotExistsException exc) {
       LOGGER.info("createWebSearchBuilder: provided configDoc '{}' doesn't exist", configDocRef);
     }
@@ -50,24 +57,26 @@ public class WebSearchScriptService implements ScriptService {
   public LuceneSearchResult webSearch(String searchTerm, DocumentReference configDocRef,
       List<String> activatedPackageNames, List<String> languages, List<String> sortFields) {
     LuceneSearchResult ret = null;
-    List<WebSearchPackage> activatedPackages = new ArrayList<>();
-    if (activatedPackageNames != null) {
-      for (String packageName : activatedPackageNames) {
-        try {
-          activatedPackages.add(Utils.getComponentManager().lookup(WebSearchPackage.class,
-              packageName));
-        } catch (ComponentLookupException exc) {
-          LOGGER.info("addPackage: invalid package '{}'", packageName);
+    if ((configDocRef != null) && rightsAccess.hasAccessLevel(configDocRef, EAccessLevel.VIEW)) {
+      List<WebSearchPackage> activatedPackages = new ArrayList<>();
+      if (activatedPackageNames != null) {
+        for (String packageName : activatedPackageNames) {
+          try {
+            activatedPackages.add(Utils.getComponentManager().lookup(WebSearchPackage.class,
+                packageName));
+          } catch (ComponentLookupException exc) {
+            LOGGER.info("addPackage: invalid package '{}'", packageName);
+          }
         }
       }
+      try {
+        ret = searchService.webSearch(searchTerm, configDocRef, activatedPackages, languages,
+            sortFields);
+      } catch (DocumentNotExistsException exc) {
+        LOGGER.info("webSearch: provided configDoc '{}' doesn't exist", configDocRef);
+      }
+      LOGGER.debug("webSearch: returning '{}'", ret);
     }
-    try {
-      ret = searchService.webSearch(searchTerm, configDocRef, activatedPackages, languages,
-          sortFields);
-    } catch (DocumentNotExistsException exc) {
-      LOGGER.info("webSearch: provided configDoc '{}' doesn't exist", configDocRef);
-    }
-    LOGGER.debug("webSearch: returning '{}'", ret);
     return ret;
   }
 
