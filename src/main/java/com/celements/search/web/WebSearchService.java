@@ -53,6 +53,7 @@ public class WebSearchService implements IWebSearchService {
       }
       searchPackages.addAll(getRequiredPackages(configDoc));
     } catch (DocumentNotExistsException exp) {
+      searchPackages.addAll(getDefaultPackages());
       LOGGER.warn("Failed to load configDoc '{}'", configDocRef, exp);
     }
     return searchPackages;
@@ -86,7 +87,9 @@ public class WebSearchService implements IWebSearchService {
       throws DocumentNotExistsException {
     WebSearchQueryBuilder ret = null;
     ret = Utils.getComponent(WebSearchQueryBuilder.class);
-    ret.setConfigDoc(modelAccess.getDocument(configDocRef));
+    if (configDocRef != null) {
+      ret.setConfigDoc(modelAccess.getDocument(configDocRef));
+    }
     return ret;
   }
 
