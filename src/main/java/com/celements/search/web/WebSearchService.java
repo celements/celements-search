@@ -69,15 +69,14 @@ public class WebSearchService implements IWebSearchService {
         WebSearchPackage.PREDICATE_DEFAULT).toList();
   }
 
-  private List<WebSearchPackage> getRequiredPackages(XWikiDocument configDoc)
+  private List<WebSearchPackage> getRequiredPackages(final XWikiDocument configDoc)
       throws DocumentNotExistsException {
-    final XWikiDocument configDocFinal = configDoc;
 
     return FluentIterable.from(webSearchPackages).filter(new Predicate<WebSearchPackage>() {
 
       @Override
       public boolean apply(WebSearchPackage searchPackage) {
-        return searchPackage.isRequired(configDocFinal);
+        return searchPackage.isRequired(configDoc);
       }
     }).toList();
   }
