@@ -16,7 +16,8 @@ import com.celements.search.web.packages.WebSearchPackage;
 @ComponentRole
 public interface IWebSearchService {
 
-  public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef);
+  @NotNull
+  public Set<WebSearchPackage> getAvailablePackages(@NotNull DocumentReference configDocRef);
 
   @NotNull
   public WebSearchQueryBuilder createWebSearchBuilder(@Nullable DocumentReference configDocRef)
