@@ -45,16 +45,20 @@ public class WebSearchService implements IWebSearchService {
   @Override
   public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef) {
     Set<WebSearchPackage> searchPackages = new LinkedHashSet<>();
-    try {
-      XWikiDocument configDoc = modelAccess.getDocument(configDocRef);
-      searchPackages.addAll(getConfiguredPackages(configDoc));
-      if (searchPackages.isEmpty()) {
-        searchPackages.addAll(getDefaultPackages());
-      }
-      searchPackages.addAll(getRequiredPackages(configDoc));
-    } catch (DocumentNotExistsException exp) {
+    if (configDocRef == null) {
       searchPackages.addAll(getDefaultPackages());
-      LOGGER.warn("Failed to load configDoc '{}'", configDocRef, exp);
+    } else {
+      try {
+        XWikiDocument configDoc = modelAccess.getDocument(configDocRef);
+        searchPackages.addAll(getConfiguredPackages(configDoc));
+        if (searchPackages.isEmpty()) {
+          searchPackages.addAll(getDefaultPackages());
+        }
+        searchPackages.addAll(getRequiredPackages(configDoc));
+      } catch (DocumentNotExistsException exp) {
+        searchPackages.addAll(getDefaultPackages());
+        LOGGER.warn("Failed to load configDoc '{}'", configDocRef, exp);
+      }
     }
     return searchPackages;
   }
