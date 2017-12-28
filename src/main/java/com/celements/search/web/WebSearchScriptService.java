@@ -2,7 +2,6 @@ package com.celements.search.web;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,8 +82,7 @@ public class WebSearchScriptService implements ScriptService {
 
   public List<String> getAvailablePackages(DocumentReference configDocRef) {
     List<String> ret = new ArrayList<>();
-    Set<WebSearchPackage> searchPackages = searchService.getAvailablePackages(configDocRef);
-    for (WebSearchPackage webSearchPackage : searchPackages) {
+    for (WebSearchPackage webSearchPackage : searchService.getAvailablePackages(configDocRef)) {
       ret.add(webSearchPackage.getName());
     }
     return ret;
