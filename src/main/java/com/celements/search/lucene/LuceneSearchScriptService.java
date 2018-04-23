@@ -239,6 +239,14 @@ public class LuceneSearchScriptService implements ScriptService {
     return ret;
   }
 
+  public int rebuildIndexWithWipe() {
+    int ret = REBUILD_NOT_ALLOWED;
+    if (webUtilsService.isSuperAdminUser()) {
+      ret = indexService.rebuildIndexWithWipe() ? 0 : REBUILD_ALREADY_IN_PROGRESS;
+    }
+    return ret;
+  }
+
   public boolean optimizeIndex() {
     boolean ret = false;
     if (webUtilsService.isSuperAdminUser()) {

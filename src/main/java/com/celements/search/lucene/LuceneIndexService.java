@@ -74,6 +74,11 @@ public class LuceneIndexService implements ILuceneIndexService {
   }
 
   @Override
+  public boolean rebuildIndexWithWipe() {
+    return getLucenePlugin().rebuildIndexWithWipe(null, false);
+  }
+
+  @Override
   public void optimizeIndex() {
     getLucenePlugin().optimizeIndex();
   }

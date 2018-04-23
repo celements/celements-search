@@ -2,6 +2,9 @@ package com.celements.search.lucene;
 
 import java.util.Collection;
 
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+
 import org.xwiki.component.annotation.ComponentRole;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
@@ -14,17 +17,19 @@ import com.xpn.xwiki.doc.XWikiDocument;
 @ComponentRole
 public interface ILuceneIndexService {
 
-  public void queueForIndexing(DocumentReference docRef) throws DocumentLoadException,
+  void queueForIndexing(@NotNull DocumentReference docRef) throws DocumentLoadException,
       DocumentNotExistsException;
 
-  public void queueForIndexing(XWikiDocument doc);
+  void queueForIndexing(@NotNull XWikiDocument doc);
 
-  public boolean rebuildIndexForAllWikis();
+  boolean rebuildIndexForAllWikis();
 
-  public boolean rebuildIndex(Collection<WikiReference> wikiRefs);
+  boolean rebuildIndex(@Nullable Collection<WikiReference> wikiRefs);
 
-  public boolean rebuildIndex(EntityReference entityRef);
+  boolean rebuildIndex(@Nullable EntityReference entityRef);
 
-  public void optimizeIndex();
+  boolean rebuildIndexWithWipe();
+
+  void optimizeIndex();
 
 }
