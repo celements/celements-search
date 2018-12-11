@@ -7,7 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -31,19 +32,27 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
 
   public static final String NAME = "priority";
 
-  private final AtomicLong SEQUENCE_COUNTER = new AtomicLong();
+  protected final AtomicLong SEQUENCE_COUNTER = new AtomicLong();
 
-  private final PriorityBlockingQueue<IndexQueueElement> queue = new PriorityBlockingQueue<>();
-  private final Map<String, IndexData> dataMap = new HashMap<>();
+  private final Queue<IndexQueueElement> queue = new PriorityQueue<>();
+  private final Map<String, IndexData> map = new HashMap<>();
 
-  @Override
-  public int getSize() {
-    return queue.size();
+  protected Queue<IndexQueueElement> getQueue() {
+    return queue;
+  }
+
+  protected Map<String, IndexData> getMap() {
+    return map;
   }
 
   @Override
-  public boolean isEmpty() {
-    return queue.isEmpty();
+  public synchronized int getSize() {
+    return getQueue().size();
+  }
+
+  @Override
+  public synchronized boolean isEmpty() {
+    return getQueue().isEmpty();
   }
 
   /**
@@ -54,7 +63,7 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
    */
   @Override
   public synchronized boolean contains(String id) {
-    return dataMap.containsKey(id);
+    return getMap().containsKey(id);
   }
 
   /**
@@ -67,8 +76,8 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
    */
   @Override
   public synchronized void add(IndexData data) {
-    if (dataMap.put(data.getId(), data) == null) {
-      queue.add(new IndexQueueElement(data.getId(), data.getPriority()));
+    if (getMap().put(data.getId(), data) == null) {
+      getQueue().add(new IndexQueueElement(data.getId(), data.getPriority()));
     }
   }
 
@@ -81,21 +90,21 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
    */
   @Override
   public synchronized IndexData remove() throws NoSuchElementException {
-    return dataMap.remove(queue.remove().id);
+    return getMap().remove(getQueue().remove().id);
   }
 
   @Override
-  public synchronized IndexData take() throws InterruptedException {
-    return dataMap.remove(queue.take().id);
+  public synchronized IndexData take() throws InterruptedException, UnsupportedOperationException {
+    throw new UnsupportedOperationException();
   }
 
-  private class IndexQueueElement implements Comparable<IndexQueueElement> {
+  protected class IndexQueueElement implements Comparable<IndexQueueElement> {
 
-    final String id;
-    final IndexQueuePriority priority;
-    final long sequence;
+    protected final String id;
+    protected final IndexQueuePriority priority;
+    protected final long sequence;
 
-    IndexQueueElement(String id, IndexQueuePriority priority) {
+    protected IndexQueueElement(String id, IndexQueuePriority priority) {
       this.id = checkNotNull(Strings.emptyToNull(id));
       this.priority = firstNonNull(priority, IndexQueuePriority.DEFAULT);
       this.sequence = SEQUENCE_COUNTER.incrementAndGet();
