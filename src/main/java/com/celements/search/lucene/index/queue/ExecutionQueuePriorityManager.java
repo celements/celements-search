@@ -16,7 +16,7 @@ public class ExecutionQueuePriorityManager implements IndexQueuePriorityManager 
   private Execution exec;
 
   @Override
-  public Optional<IndexQueuePriority> get() {
+  public Optional<IndexQueuePriority> getPriority() {
     IndexQueuePriority priority = null;
     Object property = getExecContext().getProperty(EXEC_CONTEXT_KEY);
     if (property instanceof IndexQueuePriority) {
@@ -26,7 +26,7 @@ public class ExecutionQueuePriorityManager implements IndexQueuePriorityManager 
   }
 
   @Override
-  public void put(IndexQueuePriority priority) {
+  public void putPriority(IndexQueuePriority priority) {
     getExecContext().setProperty(EXEC_CONTEXT_KEY, priority);
   }
 
