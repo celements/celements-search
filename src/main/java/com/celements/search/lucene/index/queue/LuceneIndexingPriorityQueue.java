@@ -37,10 +37,16 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
   private final Queue<IndexQueueElement> queue = new PriorityQueue<>();
   private final Map<String, IndexData> map = new HashMap<>();
 
+  /**
+   * IMPORTANT: synchronize calling methods
+   */
   protected Queue<IndexQueueElement> getQueue() {
     return queue;
   }
 
+  /**
+   * IMPORTANT: synchronize calling methods
+   */
   protected Map<String, IndexData> getMap() {
     return map;
   }
@@ -94,8 +100,8 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
   }
 
   @Override
-  public synchronized IndexData take() throws InterruptedException, UnsupportedOperationException {
-    throw new UnsupportedOperationException();
+  public IndexData take() throws InterruptedException, UnsupportedOperationException {
+    throw new UnsupportedOperationException("non blocking queue");
   }
 
   protected class IndexQueueElement implements Comparable<IndexQueueElement> {
