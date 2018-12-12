@@ -119,8 +119,8 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
     @Override
     public int compareTo(IndexQueueElement other) {
       ComparisonChain cmp = ComparisonChain.start();
-      cmp = cmp.compare(this.priority, other.priority, Ordering.natural());
-      cmp = cmp.compare(this.sequence, other.sequence, Ordering.natural().reverse());
+      cmp = cmp.compare(this.priority, other.priority, Ordering.natural().reverse());
+      cmp = cmp.compare(this.sequence, other.sequence, Ordering.natural());
       return cmp.result();
     }
 
