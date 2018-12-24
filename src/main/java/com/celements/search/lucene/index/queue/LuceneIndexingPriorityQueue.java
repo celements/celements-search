@@ -17,7 +17,7 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 
 import com.celements.search.lucene.index.IndexData;
-import com.google.common.base.Strings;
+import com.celements.search.lucene.index.LuceneDocId;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 
@@ -35,7 +35,7 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
   protected final AtomicLong SEQUENCE_COUNTER = new AtomicLong();
 
   private final Queue<IndexQueueElement> queue = new PriorityQueue<>();
-  private final Map<String, IndexData> map = new HashMap<>();
+  private final Map<LuceneDocId, IndexData> map = new HashMap<>();
 
   /**
    * IMPORTANT: synchronize calling methods
@@ -47,7 +47,7 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
   /**
    * IMPORTANT: synchronize calling methods
    */
-  protected Map<String, IndexData> getMap() {
+  protected Map<LuceneDocId, IndexData> getMap() {
     return map;
   }
 
@@ -68,7 +68,7 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
    * @return true if the queue contains the given id
    */
   @Override
-  public synchronized boolean contains(String id) {
+  public synchronized boolean contains(LuceneDocId id) {
     return getMap().containsKey(id);
   }
 
@@ -106,12 +106,12 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
 
   protected class IndexQueueElement implements Comparable<IndexQueueElement> {
 
-    protected final String id;
+    protected final LuceneDocId id;
     protected final IndexQueuePriority priority;
     protected final long sequence;
 
-    protected IndexQueueElement(String id, IndexQueuePriority priority) {
-      this.id = checkNotNull(Strings.emptyToNull(id));
+    protected IndexQueueElement(LuceneDocId id, IndexQueuePriority priority) {
+      this.id = checkNotNull(id);
       this.priority = firstNonNull(priority, IndexQueuePriority.DEFAULT);
       this.sequence = SEQUENCE_COUNTER.incrementAndGet();
     }
