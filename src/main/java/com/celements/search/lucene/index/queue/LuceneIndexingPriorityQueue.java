@@ -11,8 +11,12 @@ import java.util.concurrent.locks.Condition;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 
+import com.celements.logging.LogLevel;
+import com.celements.logging.LogUtils;
 import com.celements.search.lucene.index.IndexData;
 import com.celements.search.lucene.index.LuceneDocId;
 import com.celements.search.lucene.index.queue.CloseableReentrantLock.CloseableLock;
@@ -26,6 +30,8 @@ import com.google.common.collect.FluentIterable;
 @ThreadSafe
 @Component(LuceneIndexingPriorityQueue.NAME)
 public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(LuceneIndexingPriorityQueue.class);
 
   public static final String NAME = "priority";
 
@@ -86,7 +92,7 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
   @Override
   public void add(IndexData data) {
     try {
-      addInternal(data, false);
+      putInternal(data, false);
     } catch (InterruptedException exc) {
       throw new RuntimeException("should not happen", exc);
     }
@@ -94,22 +100,28 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
 
   @Override
   public void put(IndexData data) throws InterruptedException {
-    addInternal(data, true);
+    putInternal(data, true);
   }
 
   /**
    * Time complexity O(log(n))
    */
-  private void addInternal(IndexData data, boolean blocking) throws InterruptedException {
+  private void putInternal(IndexData data, boolean blocking) throws InterruptedException {
+    log(LogLevel.INFO, "put [{}] priority [{}]", data.getId(), data.getPriority());
     try (CloseableLock closeableLock = lock.open()) {
       if (map.put(data.getId(), data) == null) {
         IndexQueueElement element = new IndexQueueElement(data.getId(), data.getPriority());
         while (blocking && (getSize() >= getMaxQueueSize())) {
+          log(LogLevel.DEBUG, "waiting put");
           notFull.get(element.getPriority()).await();
+          log(LogLevel.DEBUG, "resume put");
         }
         queue.add(element);
-        notEmpty.signal();
+      } else {
+        log(LogLevel.DEBUG, "already in queue [{}]", data.getId());
       }
+      notEmpty.signal();
+      log(LogLevel.DEBUG, "signaled notEmpty");
     }
   }
 
@@ -119,7 +131,7 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
   @Override
   public IndexData remove() throws NoSuchElementException {
     try {
-      return removeInternal(false);
+      return takeInternal(false);
     } catch (InterruptedException exc) {
       throw new RuntimeException("should not happen", exc);
     }
@@ -127,29 +139,42 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
 
   @Override
   public IndexData take() throws InterruptedException {
-    return removeInternal(true);
+    return takeInternal(true);
   }
 
   /**
    * Time complexity O(log(n))
    */
-  private IndexData removeInternal(boolean blocking) throws InterruptedException {
+  private IndexData takeInternal(boolean blocking) throws InterruptedException {
+    IndexData data;
     try (CloseableLock closeableLock = lock.open()) {
       while (blocking && (getSize() == 0)) {
+        log(LogLevel.DEBUG, "waiting take");
         notEmpty.await();
+        log(LogLevel.DEBUG, "resume take");
       }
-      IndexData data = map.remove(queue.remove().getId());
+      data = map.remove(queue.remove().getId());
       signalNextPriorityWaiter();
-      return data;
     }
+    log(LogLevel.INFO, "took [{}] priority [{}]", data.getId(), data.getPriority());
+    return data;
   }
 
   private void signalNextPriorityWaiter() {
     Iterator<IndexQueuePriority> iter = IndexQueuePriority.list().reverse().iterator();
-    CountingCondition cond;
+    boolean signaled = false;
+    IndexQueuePriority priority;
+    CountingCondition condition;
     do {
-      cond = notFull.get(iter.next());
-    } while (!cond.signalWaiterIfAny() && iter.hasNext());
+      priority = iter.next();
+      condition = notFull.get(priority);
+      signaled |= condition.signalWaiterIfAny();
+    } while (!signaled && iter.hasNext());
+    if (signaled) {
+      log(LogLevel.DEBUG, "signaled notFull [{}]", priority);
+    } else {
+      log(LogLevel.DEBUG, "nothing to signal", priority);
+    }
   }
 
   private static int getMaxQueueSize() {
@@ -158,6 +183,11 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
 
   private static int getAwaitSeconds() {
     return 10; // TODO from cfg
+  }
+
+  private void log(LogLevel level, String msg, Object... args) {
+    LogUtils.log(LOGGER, level, "[{}] [{}] " + msg, Thread.currentThread().getName(), getSize(),
+        msg, args);
   }
 
 }
