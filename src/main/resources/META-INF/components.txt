@@ -14,4 +14,3 @@ com.celements.search.web.WebSearchService
 com.celements.search.web.WebSearchScriptService
 com.celements.search.lucene.index.queue.ExecutionQueuePriorityManager
 com.celements.search.lucene.index.queue.LuceneIndexingPriorityQueue
-com.celements.search.lucene.index.queue.LuceneIndexingBlockingPriorityQueue
