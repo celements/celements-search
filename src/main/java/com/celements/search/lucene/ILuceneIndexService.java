@@ -17,10 +17,20 @@ import com.xpn.xwiki.doc.XWikiDocument;
 @ComponentRole
 public interface ILuceneIndexService {
 
+  /**
+   * @deprecated instead use {@link #queue(EntityReference)}
+   */
+  @Deprecated
   void queueForIndexing(@NotNull DocumentReference docRef) throws DocumentLoadException,
       DocumentNotExistsException;
 
+  /**
+   * @deprecated instead use {@link #queue(EntityReference)}
+   */
+  @Deprecated
   void queueForIndexing(@NotNull XWikiDocument doc);
+
+  void queue(@NotNull EntityReference ref);
 
   boolean rebuildIndexForAllWikis();
 
