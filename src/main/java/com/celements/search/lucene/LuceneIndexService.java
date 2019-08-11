@@ -21,6 +21,7 @@ import com.celements.search.lucene.observation.LuceneQueueEvent;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
+import com.xpn.xwiki.web.Utils;
 
 @Component
 public class LuceneIndexService implements ILuceneIndexService {
@@ -32,9 +33,6 @@ public class LuceneIndexService implements ILuceneIndexService {
 
   @Requirement
   private ModelUtils modelUtils;
-
-  @Requirement
-  private ObservationManager observation;
 
   @Requirement
   private Execution execution;
@@ -57,7 +55,7 @@ public class LuceneIndexService implements ILuceneIndexService {
   @Override
   public void queue(EntityReference ref) {
     if (ref != null) {
-      observation.notify(new LuceneQueueEvent(), ref, null);
+      getObservationManager().notify(new LuceneQueueEvent(), ref, null);
     }
   }
 
@@ -91,6 +89,10 @@ public class LuceneIndexService implements ILuceneIndexService {
 
   private LucenePlugin getLucenePlugin() {
     return (LucenePlugin) getContext().getWiki().getPlugin("lucene", getContext());
+  }
+
+  private ObservationManager getObservationManager() {
+    return Utils.getComponent(ObservationManager.class);
   }
 
 }
