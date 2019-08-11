@@ -91,6 +91,9 @@ public class LuceneIndexService implements ILuceneIndexService {
     return (LucenePlugin) getContext().getWiki().getPlugin("lucene", getContext());
   }
 
+  /**
+   * loaded lazily due to cyclic dependency
+   */
   private ObservationManager getObservationManager() {
     return Utils.getComponent(ObservationManager.class);
   }

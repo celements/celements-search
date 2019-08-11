@@ -24,7 +24,7 @@ public class LuceneIndexServiceTest extends AbstractComponentTest {
   }
 
   @Test
-  public void test() {
+  public void test_queue() {
     EntityReference ref = new DocumentReference("wiki", "space", "doc");
     getMock(ObservationManager.class).notify(isA(LuceneQueueEvent.class), same(ref), isNull());
     replayDefault();
