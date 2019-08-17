@@ -1,11 +1,11 @@
 package com.celements.search.lucene.index.queue;
 
+import java.util.Optional;
+
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContext;
-
-import com.google.common.base.Optional;
 
 @Component
 public class ExecutionQueuePriorityManager implements IndexQueuePriorityManager {
@@ -22,7 +22,7 @@ public class ExecutionQueuePriorityManager implements IndexQueuePriorityManager 
     if (property instanceof IndexQueuePriority) {
       priority = (IndexQueuePriority) property;
     }
-    return Optional.fromNullable(priority);
+    return Optional.ofNullable(priority);
   }
 
   @Override

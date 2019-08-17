@@ -1,11 +1,13 @@
 package com.celements.search.lucene.index.queue;
 
+import static com.google.common.base.Preconditions.*;
+
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -20,7 +22,6 @@ import com.celements.logging.LogUtils;
 import com.celements.search.lucene.index.IndexData;
 import com.celements.search.lucene.index.LuceneDocId;
 import com.celements.search.lucene.index.queue.CloseableReentrantLock.CloseableLock;
-import com.google.common.collect.FluentIterable;
 
 /**
  * This class represents a queue for lucene data to be indexed. It's elements are ordered by their
@@ -60,9 +61,7 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
    * condition objects signaling queue not full. object per priority in order to signal threads
    * with higher priority first. manages blocking behaviour of {@link #put(IndexData)}
    */
-  private final Map<IndexQueuePriority, CountingCondition> notFull = FluentIterable.from(
-      IndexQueuePriority.values()).toMap(new CountingCondition.CreateFunction<>(lock,
-          getAwaitSeconds()));
+  private final PriorityCondition notFull = new PriorityCondition(() -> lock.newCondition());
 
   @Override
   public int getSize() {
@@ -113,7 +112,7 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
         IndexQueueElement element = new IndexQueueElement(data.getId(), data.getPriority());
         while (blocking && (getSize() >= getMaxQueueSize())) {
           log(LogLevel.DEBUG, "waiting put");
-          notFull.get(element.getPriority()).await();
+          notFull.await(element.getPriority(), getAwaitSeconds());
           log(LogLevel.DEBUG, "resume put");
         }
         queue.add(element);
@@ -150,39 +149,26 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
     try (CloseableLock closeableLock = lock.open()) {
       while (blocking && (getSize() == 0)) {
         log(LogLevel.DEBUG, "waiting take");
-        notEmpty.await();
+        notEmpty.await(getAwaitSeconds(), TimeUnit.SECONDS);
         log(LogLevel.DEBUG, "resume take");
       }
       data = map.remove(queue.remove().getId());
-      signalNextPriorityWaiter();
+      notFull.signal();
+      log(LogLevel.DEBUG, "signaled notFull");
     }
     log(LogLevel.INFO, "took [{}] priority [{}]", data.getId(), data.getPriority());
     return data;
   }
 
-  private void signalNextPriorityWaiter() {
-    Iterator<IndexQueuePriority> iter = IndexQueuePriority.list().reverse().iterator();
-    boolean signaled = false;
-    IndexQueuePriority priority;
-    CountingCondition condition;
-    do {
-      priority = iter.next();
-      condition = notFull.get(priority);
-      signaled |= condition.signalWaiterIfAny();
-    } while (!signaled && iter.hasNext());
-    if (signaled) {
-      log(LogLevel.DEBUG, "signaled notFull [{}]", priority);
-    } else {
-      log(LogLevel.DEBUG, "nothing to signal", priority);
-    }
-  }
-
+  // TODO is this really needed?
   private static int getMaxQueueSize() {
     return 1000; // TODO from cfg
   }
 
   private static int getAwaitSeconds() {
-    return 10; // TODO from cfg
+    int awaitSeconds = 10; // TODO from cfg
+    checkArgument(awaitSeconds > 0);
+    return awaitSeconds;
   }
 
   private void log(LogLevel level, String msg, Object... args) {
