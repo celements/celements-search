@@ -6,9 +6,9 @@ import static com.google.common.base.Preconditions.*;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.celements.common.MoreObjectsCel;
 import com.celements.search.lucene.index.LuceneDocId;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 
 /**
  * This class represents an element of a lucene indexing priority queue. The order is primarly
@@ -40,8 +40,8 @@ class IndexQueueElement implements Comparable<IndexQueueElement> {
   @Override
   public int compareTo(IndexQueueElement other) {
     ComparisonChain cmp = ComparisonChain.start();
-    cmp = cmp.compare(this.priority, other.priority, Ordering.natural().reverse());
-    cmp = cmp.compare(this.sequenceNb, other.sequenceNb, Ordering.natural());
+    cmp = cmp.compare(this.priority, other.priority);
+    cmp = cmp.compare(this.sequenceNb, other.sequenceNb);
     return cmp.result();
   }
 
@@ -52,11 +52,9 @@ class IndexQueueElement implements Comparable<IndexQueueElement> {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof IndexQueueElement) {
-      IndexQueueElement other = (IndexQueueElement) obj;
-      return Objects.equals(this.id, other.id);
-    }
-    return false;
+    return MoreObjectsCel.tryCast(obj, IndexQueueElement.class)
+        .map(other -> Objects.equals(this.id, other.id))
+        .orElse(false);
   }
 
   @Override

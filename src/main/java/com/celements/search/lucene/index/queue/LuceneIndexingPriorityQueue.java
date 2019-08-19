@@ -5,9 +5,9 @@ import static com.google.common.base.Preconditions.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -48,9 +48,14 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
 
   /**
    * lock providing thread safety on methods accessing {@link #queue} and {@link #map} and manages
-   * blocking behaviour, see {@link #notEmpty} and {@link #notFull}
+   * blocking behaviour, see @ {@link #empty}, {link #notEmpty} and {@link #notFull}
    */
   private final CloseableReentrantLock lock = new CloseableReentrantLock();
+
+  /**
+   * condition object signaling queue empty. manages blocking behaviour of {@link #awaitEmpty()}
+   */
+  private final Condition empty = lock.newCondition();
 
   /**
    * condition object signaling queue not empty. manages blocking behaviour of {@link #take()}
@@ -77,6 +82,10 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
     }
   }
 
+  public boolean isMaxedOut() {
+    return getSize() >= getMaxQueueSize();
+  }
+
   /**
    * {@inheritDoc}
    * Time complexity O(1)
@@ -88,10 +97,16 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
     }
   }
 
+  private IndexQueuePriority getCurrentPriority() {
+    return Optional.ofNullable(queue.peek())
+        .map(IndexQueueElement::getPriority)
+        .orElse(IndexQueuePriority.LOWEST);
+  }
+
   @Override
   public void add(IndexData data) {
     try {
-      putInternal(data, false);
+      add(data, () -> {});
     } catch (InterruptedException exc) {
       throw new RuntimeException("should not happen", exc);
     }
@@ -99,27 +114,32 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
 
   @Override
   public void put(IndexData data) throws InterruptedException {
-    putInternal(data, true);
+    add(data, getNotFullWaitable(data.getPriority()));
+  }
+
+  private Waitable getNotFullWaitable(IndexQueuePriority priority) {
+    return () -> {
+      while (isMaxedOut() && (priority.compareTo(getCurrentPriority()) <= 0)) {
+        log(LogLevel.DEBUG, "waiting on not full");
+        notFull.await(priority);
+      }
+      log(LogLevel.DEBUG, "resume after not full");
+    };
   }
 
   /**
    * Time complexity O(log(n))
    */
-  private void putInternal(IndexData data, boolean blocking) throws InterruptedException {
+  private void add(IndexData data, Waitable waitable) throws InterruptedException {
     log(LogLevel.INFO, "put [{}] priority [{}]", data.getId(), data.getPriority());
     try (CloseableLock closeableLock = lock.open()) {
       if (map.put(data.getId(), data) == null) {
-        IndexQueueElement element = new IndexQueueElement(data.getId(), data.getPriority());
-        while (blocking && (getSize() >= getMaxQueueSize())) {
-          log(LogLevel.DEBUG, "waiting put");
-          notFull.await(element.getPriority(), getAwaitSeconds());
-          log(LogLevel.DEBUG, "resume put");
-        }
-        queue.add(element);
+        waitable.await();
+        queue.add(new IndexQueueElement(data.getId(), data.getPriority()));
       } else {
         log(LogLevel.DEBUG, "already in queue [{}]", data.getId());
       }
-      notEmpty.signal();
+      notEmpty.signalAll();
       log(LogLevel.DEBUG, "signaled notEmpty");
     }
   }
@@ -130,7 +150,7 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
   @Override
   public IndexData remove() throws NoSuchElementException {
     try {
-      return takeInternal(false);
+      return remove(() -> {});
     } catch (InterruptedException exc) {
       throw new RuntimeException("should not happen", exc);
     }
@@ -138,42 +158,62 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
 
   @Override
   public IndexData take() throws InterruptedException {
-    return takeInternal(true);
+    return remove(getNotEmptyWaitable());
+  }
+
+  private Waitable getNotEmptyWaitable() {
+    return () -> {
+      while (isEmpty()) {
+        log(LogLevel.DEBUG, "waiting on not empty");
+        notEmpty.await();
+      }
+      log(LogLevel.DEBUG, "resume after not empty");
+    };
   }
 
   /**
    * Time complexity O(log(n))
    */
-  private IndexData takeInternal(boolean blocking) throws InterruptedException {
+  private IndexData remove(Waitable waitable) throws InterruptedException {
     IndexData data;
     try (CloseableLock closeableLock = lock.open()) {
-      while (blocking && (getSize() == 0)) {
-        log(LogLevel.DEBUG, "waiting take");
-        notEmpty.await(getAwaitSeconds(), TimeUnit.SECONDS);
-        log(LogLevel.DEBUG, "resume take");
-      }
+      waitable.await();
       data = map.remove(queue.remove().getId());
-      notFull.signal();
-      log(LogLevel.DEBUG, "signaled notFull");
+      if (isEmpty()) {
+        empty.signalAll();
+      }
+      if (!isMaxedOut() || !data.getPriority().equals(getCurrentPriority())) {
+        notFull.signalAllOfNextPriority();
+        log(LogLevel.DEBUG, "signaled notFull");
+      }
     }
     log(LogLevel.INFO, "took [{}] priority [{}]", data.getId(), data.getPriority());
     return data;
   }
 
-  // TODO is this really needed?
-  private static int getMaxQueueSize() {
-    return 1000; // TODO from cfg
+  // TODO move to interface
+  public void awaitEmpty() throws InterruptedException {
+    try (CloseableLock closeableLock = lock.open()) {
+      empty.await();
+    }
   }
 
-  private static int getAwaitSeconds() {
-    int awaitSeconds = 10; // TODO from cfg
-    checkArgument(awaitSeconds > 0);
-    return awaitSeconds;
+  private static int getMaxQueueSize() {
+    int maxQueueSize = 1000;
+    checkArgument(maxQueueSize > 0);
+    return maxQueueSize; // TODO from cfg
   }
 
   private void log(LogLevel level, String msg, Object... args) {
     LogUtils.log(LOGGER, level, "[{}] [{}] " + msg, Thread.currentThread().getName(), getSize(),
         msg, args);
+  }
+
+  @FunctionalInterface
+  private interface Waitable {
+
+    void await() throws InterruptedException;
+
   }
 
 }

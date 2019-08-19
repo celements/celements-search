@@ -8,7 +8,7 @@ import org.xwiki.model.reference.WikiReference;
 
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.search.lucene.index.LuceneDocId;
-import com.xpn.xwiki.plugin.lucene.WikiData;
+import com.celements.search.lucene.index.WikiData;
 import com.xpn.xwiki.web.Utils;
 
 public class LuceneIndexingPriorityQueueTest extends AbstractComponentTest {
@@ -57,9 +57,9 @@ public class LuceneIndexingPriorityQueueTest extends AbstractComponentTest {
     queue.add(newData("1"));
     queue.add(newData("2"));
     queue.add(newData("3"));
-    assertEquals("1", queue.remove().getId().asString());
-    assertEquals("2", queue.remove().getId().asString());
-    assertEquals("3", queue.remove().getId().asString());
+    assertEquals("1", queue.remove().getId().serialize());
+    assertEquals("2", queue.remove().getId().serialize());
+    assertEquals("3", queue.remove().getId().serialize());
   }
 
   @Test
@@ -70,12 +70,12 @@ public class LuceneIndexingPriorityQueueTest extends AbstractComponentTest {
     queue.add(newData("default1"));
     queue.add(newData("default2"));
     queue.add(newData("high2").setPriority(IndexQueuePriority.HIGH));
-    assertEquals("high1", queue.remove().getId().asString());
-    assertEquals("high2", queue.remove().getId().asString());
-    assertEquals("default1", queue.remove().getId().asString());
-    assertEquals("default2", queue.remove().getId().asString());
-    assertEquals("low1", queue.remove().getId().asString());
-    assertEquals("low2", queue.remove().getId().asString());
+    assertEquals("high1", queue.remove().getId().serialize());
+    assertEquals("high2", queue.remove().getId().serialize());
+    assertEquals("default1", queue.remove().getId().serialize());
+    assertEquals("default2", queue.remove().getId().serialize());
+    assertEquals("low1", queue.remove().getId().serialize());
+    assertEquals("low2", queue.remove().getId().serialize());
   }
 
   private LuceneDocId getId(String name) {

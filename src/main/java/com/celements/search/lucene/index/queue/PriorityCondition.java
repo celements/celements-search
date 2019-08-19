@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.*;
 
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.function.Supplier;
 
@@ -18,15 +17,15 @@ class PriorityCondition {
     priorityMap = new TreeMap<>();
   }
 
-  public void await(IndexQueuePriority priority, int seconds) throws InterruptedException {
+  public void await(IndexQueuePriority priority) throws InterruptedException {
     priorityMap.computeIfAbsent(priority, k -> conditionSupplier.get())
-        .await(seconds, TimeUnit.SECONDS);
+        .await();
   }
 
-  public void signal() {
+  public void signalAllOfNextPriority() {
     Optional.ofNullable(priorityMap.pollFirstEntry())
         .map(entry -> entry.getValue())
-        .ifPresent(cond -> cond.signal());
+        .ifPresent(condition -> condition.signalAll());
   }
 
 }
