@@ -119,7 +119,7 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
 
   private Waitable getNotFullWaitable(IndexQueuePriority priority) {
     return () -> {
-      while (isMaxedOut() && (priority.compareTo(getCurrentPriority()) <= 0)) {
+      while (isMaxedOut() && (priority.compareTo(getCurrentPriority()) >= 0)) {
         log(LogLevel.DEBUG, "waiting on not full");
         notFull.await(priority);
       }
