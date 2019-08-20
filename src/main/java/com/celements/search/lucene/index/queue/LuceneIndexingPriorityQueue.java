@@ -194,7 +194,9 @@ public class LuceneIndexingPriorityQueue implements LuceneIndexingQueue {
   // TODO move to interface
   public void awaitEmpty() throws InterruptedException {
     try (CloseableLock closeableLock = lock.open()) {
-      empty.await();
+      while (!isEmpty()) {
+        empty.await();
+      }
     }
   }
 

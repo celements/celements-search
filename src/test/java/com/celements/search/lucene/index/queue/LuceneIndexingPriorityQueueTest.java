@@ -13,11 +13,12 @@ import com.xpn.xwiki.web.Utils;
 
 public class LuceneIndexingPriorityQueueTest extends AbstractComponentTest {
 
-  private LuceneIndexingQueue queue;
+  private LuceneIndexingPriorityQueue queue;
 
   @Before
   public void prepareTest() {
-    queue = Utils.getComponent(LuceneIndexingQueue.class, LuceneIndexingPriorityQueue.NAME);
+    queue = (LuceneIndexingPriorityQueue) Utils.getComponent(LuceneIndexingQueue.class,
+        LuceneIndexingPriorityQueue.NAME);
   }
 
   @Test
@@ -78,11 +79,11 @@ public class LuceneIndexingPriorityQueueTest extends AbstractComponentTest {
     assertEquals("low2", queue.remove().getId().serialize());
   }
 
-  private LuceneDocId getId(String name) {
+  private static LuceneDocId getId(String name) {
     return new LuceneDocId(new WikiReference(name), null);
   }
 
-  private WikiData newData(String name) {
+  private static WikiData newData(String name) {
     return new WikiData(new WikiReference(name), false);
   }
 
