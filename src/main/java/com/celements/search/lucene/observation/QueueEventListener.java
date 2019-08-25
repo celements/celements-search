@@ -81,8 +81,9 @@ public class QueueEventListener extends AbstractRemoteEventListener<EntityRefere
     } else if (ref instanceof DocumentReference) {
       data = new DocumentData(modelAccess.getDocument((DocumentReference) ref));
     } else if (ref instanceof AttachmentReference) {
+      DocumentReference docRef = ((AttachmentReference) ref).getDocumentReference();
       XWikiAttachment attach = modelAccess.getAttachmentNameEqual(
-          modelAccess.getDocument((DocumentReference) ref), ref.getName());
+          modelAccess.getDocument(docRef), ref.getName());
       data = new AttachmentData(attach);
     } else if (ref instanceof WikiReference) {
       data = new WikiData((WikiReference) ref);

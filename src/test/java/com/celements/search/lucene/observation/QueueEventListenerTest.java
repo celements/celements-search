@@ -17,9 +17,9 @@ import com.celements.common.observation.listener.AbstractRemoteEventListener;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentNotExistsException;
+import com.celements.search.lucene.index.queue.LuceneIndexingQueue;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.plugin.lucene.LucenePlugin;
 import com.xpn.xwiki.web.Utils;
 
 public class QueueEventListenerTest extends AbstractComponentTest {
@@ -28,11 +28,9 @@ public class QueueEventListenerTest extends AbstractComponentTest {
 
   @Before
   public void prepareTest() throws Exception {
-    registerComponentMock(IModelAccessFacade.class);
+    registerComponentMocks(IModelAccessFacade.class);
     listener = (QueueEventListener) Utils.getComponent(EventListener.class,
         QueueEventListener.NAME);
-    expect(getWikiMock().getPlugin(eq("lucene"), same(getContext())))
-        .andReturn(createMockAndAddToDefault(LucenePlugin.class)).anyTimes();
   }
 
   @Test
@@ -50,13 +48,12 @@ public class QueueEventListenerTest extends AbstractComponentTest {
   public void test_onEvent_docRef() throws Exception {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
-    expect(getMock(IModelAccessFacade.class).getDocument(docRef)).andReturn(doc);
-    getMock(LucenePlugin.class).queueDocument(same(doc), same(getContext()));
-    getMock(LucenePlugin.class).queueAttachment(same(doc), same(getContext()));
+    expect(getMock(IModelAccessFacade.class).getDocument(eq(docRef))).andReturn(doc);
 
     replayDefault();
     listener.onEvent(new LuceneQueueEvent(), docRef, null);
     verifyDefault();
+    assertEquals(1, Utils.getComponent(LuceneIndexingQueue.class).getSize());
   }
 
   @Test
@@ -67,7 +64,6 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     AttachmentReference attRef = new AttachmentReference("file", doc.getDocumentReference());
     XWikiAttachment att = new XWikiAttachment(doc, attRef.getName());
     doc.setAttachmentList(ImmutableList.of(att));
-    getMock(LucenePlugin.class).queueAttachment(same(doc), same(att), same(getContext()));
 
     replayDefault();
     listener.onEvent(new LuceneQueueEvent(), attRef, null);

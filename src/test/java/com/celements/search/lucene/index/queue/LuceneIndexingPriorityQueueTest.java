@@ -84,7 +84,7 @@ public class LuceneIndexingPriorityQueueTest extends AbstractComponentTest {
   }
 
   private static WikiData newData(String name) {
-    return new WikiData(new WikiReference(name), false);
+    return new WikiData(new WikiReference(name));
   }
 
 }

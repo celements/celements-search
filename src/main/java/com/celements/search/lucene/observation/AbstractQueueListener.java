@@ -16,6 +16,8 @@ import com.celements.search.lucene.index.queue.LuceneIndexingQueue;
 public abstract class AbstractQueueListener<R extends EntityReference, S>
     extends AbstractRemoteEventListener<S, Object> {
 
+  // TODO tests
+
   @Requirement
   private LuceneIndexingQueue indexingQueue;
 

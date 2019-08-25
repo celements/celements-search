@@ -162,6 +162,6 @@ public class LuceneIndexingPriorityQueueConcurrentTest extends AbstractComponent
   }
 
   private static IndexData newData(Integer nb) {
-    return new WikiData(new WikiReference(Integer.toString(nb)), false);
+    return new WikiData(new WikiReference(Integer.toString(nb)));
   }
 }
