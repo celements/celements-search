@@ -114,7 +114,7 @@ public class LuceneIndexingPriorityQueueConcurrentTest extends AbstractComponent
       try {
         while (running.get()) {
           IndexData data = queue.take();
-          if (strict && (count.get() != Integer.parseInt(data.getWiki()))) {
+          if (strict && (count.get() != Integer.parseInt(data.getWikiRef().getName()))) {
             failed.set(true);
           }
           count.incrementAndGet();

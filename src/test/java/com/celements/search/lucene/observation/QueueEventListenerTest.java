@@ -82,11 +82,11 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     AttachmentReference attRef = new AttachmentReference("file", docRef);
     XWikiDocument doc = createDocMock(docRef);
     XWikiAttachment att = createMockAndAddToDefault(XWikiAttachment.class);
-    expect(att.getDoc()).andReturn(doc);
+    expect(att.getDoc()).andReturn(doc).atLeastOnce();
+    expect(att.getFilename()).andReturn(attRef.getName()).atLeastOnce();
     expect(att.getDate()).andReturn(new Date());
     expect(att.getAuthor()).andReturn("heinrich");
     expect(att.getFilesize()).andReturn(5);
-    expect(att.getFilename()).andReturn(attRef.getName());
     expect(att.getMimeType(getContext())).andReturn("mime");
     expect(modelAccessMock.getAttachmentNameEqual(same(doc), eq(attRef.getName())))
         .andReturn(att);
