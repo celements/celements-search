@@ -10,8 +10,6 @@ import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.observation.event.Event;
 
 import com.celements.model.reference.RefBuilder;
-import com.celements.search.lucene.index.AttachmentData;
-import com.celements.search.lucene.index.IndexData;
 import com.celements.search.lucene.index.queue.LuceneIndexingQueue;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.internal.event.AbstractAttachmentEvent;
@@ -19,10 +17,11 @@ import com.xpn.xwiki.internal.event.AttachmentAddedEvent;
 import com.xpn.xwiki.internal.event.AttachmentDeletedEvent;
 import com.xpn.xwiki.internal.event.AttachmentUpdatedEvent;
 
-@Component(QueueAttachmentListener.NAME)
-public class QueueAttachmentListener extends AbstractQueueListener<AttachmentReference, XWikiDocument> {
+@Component(QueueAttachmentEventConverter.NAME)
+public class QueueAttachmentEventConverter
+    extends AbstractQueueEventConverter<AttachmentReference, XWikiDocument> {
 
-  public static final String NAME = "celements.search.QueueAttachmentListener";
+  public static final String NAME = "LuceneQueueAttachmentEventConverter";
 
   @Requirement
   private LuceneIndexingQueue indexingQueue;
@@ -46,11 +45,6 @@ public class QueueAttachmentListener extends AbstractQueueListener<AttachmentRef
     return RefBuilder.from(doc.getDocumentReference())
         .with(EntityType.ATTACHMENT, attachEvent.getName())
         .build(AttachmentReference.class);
-  }
-
-  @Override
-  protected IndexData getIndexData(AttachmentReference attRef, XWikiDocument doc) {
-    return new AttachmentData(doc, attRef.getName());
   }
 
 }

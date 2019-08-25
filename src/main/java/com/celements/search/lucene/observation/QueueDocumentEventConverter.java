@@ -10,14 +10,13 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.event.Event;
 
-import com.celements.search.lucene.index.DocumentData;
-import com.celements.search.lucene.index.IndexData;
 import com.xpn.xwiki.doc.XWikiDocument;
 
-@Component(QueueDocumentListener.NAME)
-public class QueueDocumentListener extends AbstractQueueListener<DocumentReference, XWikiDocument> {
+@Component(QueueDocumentEventConverter.NAME)
+public class QueueDocumentEventConverter
+    extends AbstractQueueEventConverter<DocumentReference, XWikiDocument> {
 
-  public static final String NAME = "celements.search.QueueDocumentListener";
+  public static final String NAME = "LuceneQueueDocumentEventConverter";
 
   @Override
   public String getName() {
@@ -35,11 +34,6 @@ public class QueueDocumentListener extends AbstractQueueListener<DocumentReferen
   @Override
   protected DocumentReference getReference(Event event, XWikiDocument doc) {
     return doc.getDocumentReference();
-  }
-
-  @Override
-  protected IndexData getIndexData(DocumentReference docRef, XWikiDocument doc) {
-    return new DocumentData(doc);
   }
 
 }

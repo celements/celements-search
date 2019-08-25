@@ -27,12 +27,17 @@ import com.celements.search.lucene.index.WikiData;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.celements.search.lucene.index.queue.IndexQueuePriorityManager;
 import com.celements.search.lucene.index.queue.LuceneIndexingQueue;
+import com.celements.search.lucene.observation.event.LuceneQueueDeleteEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueDeleteLocalEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueIndexEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueIndexLocalEvent;
 import com.xpn.xwiki.doc.XWikiAttachment;
 
 @Component(QueueEventListener.NAME)
 public class QueueEventListener extends AbstractRemoteEventListener<EntityReference, Void> {
 
-  public static final String NAME = "celements.search.QueueEventListener";
+  public static final String NAME = "LuceneQueueEventListener";
 
   @Requirement
   private ModelUtils modelUtils;
@@ -50,30 +55,32 @@ public class QueueEventListener extends AbstractRemoteEventListener<EntityRefere
 
   @Override
   public List<Event> getEvents() {
-    return Arrays.asList(new LuceneQueueEvent());
+    return Arrays.asList(
+        new LuceneQueueIndexEvent(),
+        new LuceneQueueDeleteEvent(),
+        new LuceneQueueIndexLocalEvent(),
+        new LuceneQueueDeleteLocalEvent());
   }
 
   @Override
   protected void onEventInternal(Event event, EntityReference ref, Void data) {
     LuceneQueueEvent queueEvent = (LuceneQueueEvent) event;
     try {
-      Optional<IndexData> indexData = buildIndexDataFromEvent((LuceneQueueEvent) event, ref);
-      if (indexData.isPresent()) {
-        IndexQueuePriority priority = indexQueuePrioManager.getPriority()
-            .orElse(IndexQueuePriority.DEFAULT);
-        indexData.get().setPriority(priority);
-        indexingQueue.add(indexData.get());
-        LOGGER.info("queued{} at priority {}: {}", (queueEvent.isDelete() ? " delete" : ""), priority,
-            indexData.get().getId());
-      } else {
-        LOGGER.warn("unable to queue [{}]", defer(() -> modelUtils.serializeRef(ref)));
-      }
+      buildIndexData(queueEvent, ref).ifPresent(indexData -> {
+        IndexQueuePriority priority = queueEvent.getPriority()
+            .orElse(indexQueuePrioManager.getPriority()
+            .orElse(IndexQueuePriority.DEFAULT));
+        indexData.setPriority(priority);
+        indexingQueue.add(indexData);
+        LOGGER.info("queued{} at priority {}: {}", (queueEvent.isDelete() ? " delete" : ""),
+            priority, indexData.getId());
+      });
     } catch (DocumentNotExistsException | AttachmentNotExistsException exc) {
       LOGGER.warn("failed queing [{}]: {}", modelUtils.serializeRef(ref), exc.getMessage(), exc);
     }
   }
 
-  private Optional<IndexData> buildIndexDataFromEvent(LuceneQueueEvent event, EntityReference ref)
+  private Optional<IndexData> buildIndexData(LuceneQueueEvent event, EntityReference ref)
       throws DocumentNotExistsException, AttachmentNotExistsException {
     IndexData data = null;
     if (event.isDelete()) {
@@ -87,6 +94,8 @@ public class QueueEventListener extends AbstractRemoteEventListener<EntityRefere
       data = new AttachmentData(attach);
     } else if (ref instanceof WikiReference) {
       data = new WikiData((WikiReference) ref);
+    } else {
+      LOGGER.warn("unable to queue [{}]", defer(() -> modelUtils.serializeRef(ref)));
     }
     return Optional.ofNullable(data);
   }

@@ -12,13 +12,11 @@ import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.event.Event;
 
 import com.celements.model.reference.RefBuilder;
-import com.celements.search.lucene.index.IndexData;
-import com.celements.search.lucene.index.WikiData;
 
-@Component(QueueWikiListener.NAME)
-public class QueueWikiListener extends AbstractQueueListener<WikiReference, Object> {
+@Component(QueueWikiEventConverter.NAME)
+public class QueueWikiEventConverter extends AbstractQueueEventConverter<WikiReference, Object> {
 
-  public static final String NAME = "celements.search.QueueWikiListener";
+  public static final String NAME = "LuceneQueueWikiEventConverter";
 
   @Override
   public String getName() {
@@ -38,11 +36,6 @@ public class QueueWikiListener extends AbstractQueueListener<WikiReference, Obje
     return RefBuilder.create()
         .with(EntityType.WIKI, wikiEvent.getWikiId())
         .build(WikiReference.class);
-  }
-
-  @Override
-  protected IndexData getIndexData(WikiReference wikiRef, Object source) {
-    return new WikiData(wikiRef);
   }
 
 }

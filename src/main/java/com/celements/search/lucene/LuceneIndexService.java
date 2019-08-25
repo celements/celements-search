@@ -20,7 +20,9 @@ import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.reference.RefBuilder;
 import com.celements.model.util.ModelUtils;
-import com.celements.search.lucene.observation.LuceneQueueEvent;
+import com.celements.search.lucene.index.queue.IndexQueuePriority;
+import com.celements.search.lucene.observation.event.LuceneQueueDeleteEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueIndexEvent;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -46,12 +48,14 @@ public class LuceneIndexService implements ILuceneIndexService {
   }
 
   @Override
+  @Deprecated
   public void queueForIndexing(DocumentReference docRef) throws DocumentLoadException,
       DocumentNotExistsException {
     queue(docRef);
   }
 
   @Override
+  @Deprecated
   public void queueForIndexing(XWikiDocument doc) {
     queue(doc.getDocumentReference());
     for (XWikiAttachment attach : doc.getAttachmentList()) {
@@ -64,7 +68,28 @@ public class LuceneIndexService implements ILuceneIndexService {
   @Override
   public void queue(EntityReference ref) {
     if (ref != null) {
-      getObservationManager().notify(new LuceneQueueEvent(), ref, null);
+      getObservationManager().notify(new LuceneQueueIndexEvent(), ref, null);
+    }
+  }
+
+  @Override
+  public void queue(EntityReference ref, IndexQueuePriority priority) {
+    if (ref != null) {
+      getObservationManager().notify(new LuceneQueueIndexEvent(priority), ref, null);
+    }
+  }
+
+  @Override
+  public void queueDelete(EntityReference ref) {
+    if (ref != null) {
+      getObservationManager().notify(new LuceneQueueDeleteEvent(), ref, null);
+    }
+  }
+
+  @Override
+  public void queueDelete(EntityReference ref, IndexQueuePriority priority) {
+    if (ref != null) {
+      getObservationManager().notify(new LuceneQueueDeleteEvent(priority), ref, null);
     }
   }
 
