@@ -14,6 +14,7 @@ import org.xwiki.observation.ObservationManager;
 
 import com.celements.common.observation.listener.AbstractRemoteEventListener;
 import com.celements.common.test.AbstractComponentTest;
+import com.celements.search.lucene.index.LuceneDocId;
 import com.celements.search.lucene.observation.event.LuceneQueueDeleteLocalEvent;
 import com.celements.search.lucene.observation.event.LuceneQueueIndexLocalEvent;
 import com.xpn.xwiki.web.Utils;
@@ -45,7 +46,7 @@ public class QueueWikiEventConverterTest extends AbstractComponentTest {
   public void test_onEvent_created() throws Exception {
     WikiReference wikiRef = new WikiReference("wiki");
     getMock(ObservationManager.class).notify(isA(LuceneQueueIndexLocalEvent.class),
-        eq(wikiRef), isNull());
+        eq(new LuceneDocId(wikiRef)), isNull());
 
     replayDefault();
     listener.onEvent(new WikiCreatedEvent(wikiRef.getName()), wikiRef, null);
@@ -56,7 +57,7 @@ public class QueueWikiEventConverterTest extends AbstractComponentTest {
   public void test_onEvent_deleted() throws Exception {
     WikiReference wikiRef = new WikiReference("wiki");
     getMock(ObservationManager.class).notify(isA(LuceneQueueDeleteLocalEvent.class),
-        eq(wikiRef), isNull());
+        eq(new LuceneDocId(wikiRef)), isNull());
 
     replayDefault();
     listener.onEvent(new WikiDeletedEvent(wikiRef.getName()), wikiRef, null);

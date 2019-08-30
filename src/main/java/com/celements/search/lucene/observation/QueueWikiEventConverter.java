@@ -12,6 +12,7 @@ import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.event.Event;
 
 import com.celements.model.reference.RefBuilder;
+import com.celements.search.lucene.index.LuceneDocId;
 
 @Component(QueueWikiEventConverter.NAME)
 public class QueueWikiEventConverter extends AbstractQueueEventConverter<WikiReference, Object> {
@@ -31,11 +32,12 @@ public class QueueWikiEventConverter extends AbstractQueueEventConverter<WikiRef
   }
 
   @Override
-  protected WikiReference getReference(Event event, Object source) {
+  protected LuceneDocId getLuceneDocId(Event event, Object source) {
     AbstractWikiEvent wikiEvent = (AbstractWikiEvent) event;
-    return RefBuilder.create()
+    WikiReference wikiRef = RefBuilder.create()
         .with(EntityType.WIKI, wikiEvent.getWikiId())
         .build(WikiReference.class);
+    return new LuceneDocId(wikiRef);
   }
 
 }

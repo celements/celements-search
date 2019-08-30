@@ -3,6 +3,8 @@ package com.celements.search.lucene;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.validation.constraints.NotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
@@ -20,6 +22,7 @@ import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.reference.RefBuilder;
 import com.celements.model.util.ModelUtils;
+import com.celements.search.lucene.index.LuceneDocId;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.celements.search.lucene.observation.event.LuceneQueueDeleteEvent;
 import com.celements.search.lucene.observation.event.LuceneQueueIndexEvent;
@@ -68,28 +71,81 @@ public class LuceneIndexService implements ILuceneIndexService {
   @Override
   public void queue(EntityReference ref) {
     if (ref != null) {
-      getObservationManager().notify(new LuceneQueueIndexEvent(), ref, null);
+      getObservationManager().notify(
+          new LuceneQueueIndexEvent(),
+          new LuceneDocId(ref),
+          null);
     }
   }
 
   @Override
   public void queue(EntityReference ref, IndexQueuePriority priority) {
     if (ref != null) {
-      getObservationManager().notify(new LuceneQueueIndexEvent(priority), ref, null);
+      getObservationManager().notify(
+          new LuceneQueueIndexEvent(priority),
+          new LuceneDocId(ref),
+          null);
+    }
+  }
+
+  @Override
+  public void queue(DocumentReference docRef, String lang) {
+    if (docRef != null) {
+      getObservationManager().notify(
+          new LuceneQueueIndexEvent(),
+          new LuceneDocId(docRef, lang),
+          null);
+    }
+  }
+
+  @Override
+  public void queue(DocumentReference docRef, String lang, IndexQueuePriority priority) {
+    if (docRef != null) {
+      getObservationManager().notify(
+          new LuceneQueueIndexEvent(priority),
+          new LuceneDocId(docRef, lang),
+          null);
     }
   }
 
   @Override
   public void queueDelete(EntityReference ref) {
     if (ref != null) {
-      getObservationManager().notify(new LuceneQueueDeleteEvent(), ref, null);
+      getObservationManager().notify(
+          new LuceneQueueDeleteEvent(),
+          new LuceneDocId(ref),
+          null);
     }
   }
 
   @Override
   public void queueDelete(EntityReference ref, IndexQueuePriority priority) {
     if (ref != null) {
-      getObservationManager().notify(new LuceneQueueDeleteEvent(priority), ref, null);
+      getObservationManager().notify(
+          new LuceneQueueDeleteEvent(priority),
+          new LuceneDocId(ref),
+          null);
+    }
+  }
+
+  @Override
+  public void queueDelete(@NotNull DocumentReference docRef, @NotNull String lang) {
+    if (docRef != null) {
+      getObservationManager().notify(
+          new LuceneQueueDeleteEvent(),
+          new LuceneDocId(docRef, lang),
+          null);
+    }
+  }
+
+  @Override
+  public void queueDelete(@NotNull DocumentReference docRef, @NotNull String lang,
+      IndexQueuePriority priority) {
+    if (docRef != null) {
+      getObservationManager().notify(
+          new LuceneQueueDeleteEvent(priority),
+          new LuceneDocId(docRef, lang),
+          null);
     }
   }
 

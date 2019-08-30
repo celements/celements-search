@@ -10,6 +10,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.event.Event;
 
+import com.celements.search.lucene.index.LuceneDocId;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 @Component(QueueDocumentEventConverter.NAME)
@@ -32,8 +33,8 @@ public class QueueDocumentEventConverter
   }
 
   @Override
-  protected DocumentReference getReference(Event event, XWikiDocument doc) {
-    return doc.getDocumentReference();
+  protected LuceneDocId getLuceneDocId(Event event, XWikiDocument doc) {
+    return new LuceneDocId(doc.getDocumentReference(), doc.getLanguage());
   }
 
 }

@@ -4,6 +4,7 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.observation.event.Event;
 
 import com.celements.common.observation.listener.AbstractRemoteEventListener;
+import com.celements.search.lucene.index.LuceneDocId;
 import com.celements.search.lucene.observation.event.LuceneQueueDeleteLocalEvent;
 import com.celements.search.lucene.observation.event.LuceneQueueIndexLocalEvent;
 
@@ -15,11 +16,11 @@ public abstract class AbstractQueueEventConverter<R extends EntityReference, S>
     Event notifyEvent = event.getClass().getSimpleName().endsWith("DeletedEvent")
         ? new LuceneQueueDeleteLocalEvent()
         : new LuceneQueueIndexLocalEvent();
-    R ref = getReference(event, source);
-    LOGGER.debug("notifying [{}] on [{}]", notifyEvent, ref);
-    getObservationManager().notify(notifyEvent, ref, null);
+    LuceneDocId docId = getLuceneDocId(event, source);
+    LOGGER.debug("notifying [{}] on [{}]", notifyEvent, docId);
+    getObservationManager().notify(notifyEvent, docId, null);
   }
 
-  protected abstract R getReference(Event event, S source);
+  protected abstract LuceneDocId getLuceneDocId(Event event, S source);
 
 }

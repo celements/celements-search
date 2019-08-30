@@ -35,9 +35,19 @@ public interface ILuceneIndexService {
 
   void queue(@NotNull EntityReference ref, @Nullable IndexQueuePriority priority);
 
+  void queue(@NotNull DocumentReference docRef, @NotNull String lang);
+
+  void queue(@NotNull DocumentReference docRef, @NotNull String lang,
+      @Nullable IndexQueuePriority priority);
+
   void queueDelete(@NotNull EntityReference ref);
 
   void queueDelete(@NotNull EntityReference ref, @Nullable IndexQueuePriority priority);
+
+  void queueDelete(@NotNull DocumentReference docRef, @NotNull String lang);
+
+  void queueDelete(@NotNull DocumentReference docRef, @NotNull String lang,
+      @Nullable IndexQueuePriority priority);
 
   boolean rebuildIndexForAllWikis();
 

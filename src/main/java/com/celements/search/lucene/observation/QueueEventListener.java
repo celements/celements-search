@@ -1,7 +1,5 @@
 package com.celements.search.lucene.observation;
 
-import static com.celements.logging.LogUtils.*;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +8,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.event.Event;
 
@@ -35,7 +32,7 @@ import com.celements.search.lucene.observation.event.LuceneQueueIndexLocalEvent;
 import com.xpn.xwiki.doc.XWikiAttachment;
 
 @Component(QueueEventListener.NAME)
-public class QueueEventListener extends AbstractRemoteEventListener<EntityReference, Void> {
+public class QueueEventListener extends AbstractRemoteEventListener<LuceneDocId, Void> {
 
   public static final String NAME = "LuceneQueueEventListener";
 
@@ -63,39 +60,40 @@ public class QueueEventListener extends AbstractRemoteEventListener<EntityRefere
   }
 
   @Override
-  protected void onEventInternal(Event event, EntityReference ref, Void data) {
+  protected void onEventInternal(Event event, LuceneDocId docId, Void data) {
     LuceneQueueEvent queueEvent = (LuceneQueueEvent) event;
     try {
-      buildIndexData(queueEvent, ref).ifPresent(indexData -> {
+      buildIndexData(queueEvent, docId).ifPresent(indexData -> {
         IndexQueuePriority priority = queueEvent.getPriority()
             .orElse(indexQueuePrioManager.getPriority()
-            .orElse(IndexQueuePriority.DEFAULT));
+                .orElse(IndexQueuePriority.DEFAULT));
         indexData.setPriority(priority);
         indexingQueue.add(indexData);
         LOGGER.info("queued{} at priority {}: {}", (queueEvent.isDelete() ? " delete" : ""),
             priority, indexData.getId());
       });
     } catch (DocumentNotExistsException | AttachmentNotExistsException exc) {
-      LOGGER.warn("failed queing [{}]: {}", modelUtils.serializeRef(ref), exc.getMessage(), exc);
+      LOGGER.warn("failed queing [{}]: {}", docId, exc.getMessage(), exc);
     }
   }
 
-  private Optional<IndexData> buildIndexData(LuceneQueueEvent event, EntityReference ref)
+  private Optional<IndexData> buildIndexData(LuceneQueueEvent event, LuceneDocId docId)
       throws DocumentNotExistsException, AttachmentNotExistsException {
     IndexData data = null;
     if (event.isDelete()) {
-      data = new DeleteData(new LuceneDocId(ref));
-    } else if (ref instanceof DocumentReference) {
-      data = new DocumentData(modelAccess.getDocument((DocumentReference) ref));
-    } else if (ref instanceof AttachmentReference) {
-      DocumentReference docRef = ((AttachmentReference) ref).getDocumentReference();
+      data = new DeleteData(docId);
+    } else if (docId.getRef() instanceof WikiReference) {
+      data = new WikiData((WikiReference) docId.getRef());
+    } else if (docId.getRef() instanceof DocumentReference) {
+      data = new DocumentData(modelAccess.getDocument(
+          (DocumentReference) docId.getRef(), docId.getLang()));
+    } else if (docId.getRef() instanceof AttachmentReference) {
+      AttachmentReference attRef = (AttachmentReference) docId.getRef();
       XWikiAttachment attach = modelAccess.getAttachmentNameEqual(
-          modelAccess.getDocument(docRef), ref.getName());
+          modelAccess.getDocument(attRef.getDocumentReference()), attRef.getName());
       data = new AttachmentData(attach);
-    } else if (ref instanceof WikiReference) {
-      data = new WikiData((WikiReference) ref);
     } else {
-      LOGGER.warn("unable to queue [{}]", defer(() -> modelUtils.serializeRef(ref)));
+      LOGGER.warn("unable to queue [{}]", docId);
     }
     return Optional.ofNullable(data);
   }

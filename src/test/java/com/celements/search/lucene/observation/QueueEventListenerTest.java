@@ -92,7 +92,7 @@ public class QueueEventListenerTest extends AbstractComponentTest {
         .andReturn(att);
 
     replayDefault();
-    listener.onEvent(new LuceneQueueIndexEvent(), attRef, null);
+    listener.onEvent(new LuceneQueueIndexEvent(), new LuceneDocId(attRef), null);
     verifyDefault();
 
     assertEquals(1, getQueue().getSize());
@@ -106,7 +106,7 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     WikiReference wikiRef = new WikiReference("wiki");
 
     replayDefault();
-    listener.onEvent(new LuceneQueueIndexEvent(), wikiRef, null);
+    listener.onEvent(new LuceneQueueIndexEvent(), new LuceneDocId(wikiRef), null);
     verifyDefault();
 
     assertEquals(1, getQueue().getSize());
@@ -120,7 +120,7 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     WikiReference wikiRef = new WikiReference("wiki");
 
     replayDefault();
-    listener.onEvent(new LuceneQueueDeleteEvent(), wikiRef, null);
+    listener.onEvent(new LuceneQueueDeleteEvent(), new LuceneDocId(wikiRef), null);
     verifyDefault();
 
     assertEquals(1, getQueue().getSize());
@@ -134,7 +134,7 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     SpaceReference ref = new SpaceReference("space", new WikiReference("wiki"));
 
     replayDefault();
-    listener.onEvent(new LuceneQueueIndexEvent(), ref, null);
+    listener.onEvent(new LuceneQueueIndexEvent(), new LuceneDocId(ref), null);
     verifyDefault();
 
     assertEquals(0, getQueue().getSize());
@@ -143,11 +143,11 @@ public class QueueEventListenerTest extends AbstractComponentTest {
   @Test
   public void test_onEvent_DocumentNotExistsException() throws Exception {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
-    expect(modelAccessMock.getDocument(docRef))
+    expect(modelAccessMock.getDocument(docRef, "default"))
         .andThrow(new DocumentNotExistsException(docRef));
 
     replayDefault();
-    listener.onEvent(new LuceneQueueIndexEvent(), docRef, null);
+    listener.onEvent(new LuceneQueueIndexEvent(), new LuceneDocId(docRef), null);
     verifyDefault();
 
     assertEquals(0, getQueue().getSize());
@@ -162,7 +162,7 @@ public class QueueEventListenerTest extends AbstractComponentTest {
         .andThrow(new AttachmentNotExistsException(attRef));
 
     replayDefault();
-    listener.onEvent(new LuceneQueueIndexEvent(), attRef, null);
+    listener.onEvent(new LuceneQueueIndexEvent(), new LuceneDocId(attRef), null);
     verifyDefault();
 
     assertEquals(0, getQueue().getSize());

@@ -13,6 +13,7 @@ import org.xwiki.observation.ObservationManager;
 
 import com.celements.common.observation.listener.AbstractRemoteEventListener;
 import com.celements.common.test.AbstractComponentTest;
+import com.celements.search.lucene.index.LuceneDocId;
 import com.celements.search.lucene.observation.event.LuceneQueueDeleteLocalEvent;
 import com.celements.search.lucene.observation.event.LuceneQueueIndexLocalEvent;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -51,7 +52,7 @@ public class QueueAttachmentEventConverterTest extends AbstractComponentTest {
     XWikiDocument doc = new XWikiDocument(docRef);
     AttachmentReference attRef = new AttachmentReference("file", docRef);
     getMock(ObservationManager.class).notify(isA(LuceneQueueIndexLocalEvent.class),
-        eq(attRef), isNull());
+        eq(new LuceneDocId(attRef)), isNull());
 
     replayDefault();
     listener.onEvent(new AttachmentAddedEvent("docName", attRef.getName()), doc, null);
@@ -64,7 +65,7 @@ public class QueueAttachmentEventConverterTest extends AbstractComponentTest {
     XWikiDocument doc = new XWikiDocument(docRef);
     AttachmentReference attRef = new AttachmentReference("file", docRef);
     getMock(ObservationManager.class).notify(isA(LuceneQueueIndexLocalEvent.class),
-        eq(attRef), isNull());
+        eq(new LuceneDocId(attRef)), isNull());
 
     replayDefault();
     listener.onEvent(new AttachmentUpdatedEvent("docName", attRef.getName()), doc, null);
@@ -77,7 +78,7 @@ public class QueueAttachmentEventConverterTest extends AbstractComponentTest {
     XWikiDocument doc = new XWikiDocument(docRef);
     AttachmentReference attRef = new AttachmentReference("file", docRef);
     getMock(ObservationManager.class).notify(isA(LuceneQueueDeleteLocalEvent.class),
-        eq(attRef), isNull());
+        eq(new LuceneDocId(attRef)), isNull());
 
     replayDefault();
     listener.onEvent(new AttachmentDeletedEvent("docName", attRef.getName()), doc, null);

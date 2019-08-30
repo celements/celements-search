@@ -10,6 +10,7 @@ import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.observation.event.Event;
 
 import com.celements.model.reference.RefBuilder;
+import com.celements.search.lucene.index.LuceneDocId;
 import com.celements.search.lucene.index.queue.LuceneIndexingQueue;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.internal.event.AbstractAttachmentEvent;
@@ -40,11 +41,12 @@ public class QueueAttachmentEventConverter
   }
 
   @Override
-  protected AttachmentReference getReference(Event event, XWikiDocument doc) {
+  protected LuceneDocId getLuceneDocId(Event event, XWikiDocument doc) {
     AbstractAttachmentEvent attachEvent = (AbstractAttachmentEvent) event;
-    return RefBuilder.from(doc.getDocumentReference())
+    AttachmentReference attRef = RefBuilder.from(doc.getDocumentReference())
         .with(EntityType.ATTACHMENT, attachEvent.getName())
         .build(AttachmentReference.class);
+    return new LuceneDocId(attRef);
   }
 
 }

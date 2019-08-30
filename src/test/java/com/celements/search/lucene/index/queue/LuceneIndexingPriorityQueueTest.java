@@ -80,7 +80,7 @@ public class LuceneIndexingPriorityQueueTest extends AbstractComponentTest {
   }
 
   private static LuceneDocId getId(String name) {
-    return new LuceneDocId(new WikiReference(name), null);
+    return new LuceneDocId(new WikiReference(name));
   }
 
   private static WikiData newData(String name) {
