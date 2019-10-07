@@ -7,7 +7,7 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>celements-search</artifactId>
-  <version>4.0-SNAPSHOT</version>
+  <version>4.0</version>
   <description>Celements Search</description>
   <dependencies>
     <!-- Add here all your dependencies -->
@@ -38,6 +38,6 @@
     <connection>scm:git:git@github.com:celements/celements-search.git</connection>
     <developerConnection>scm:git:git@github.com:celements/celements-search.git</developerConnection>
     <url>https://github.com/celements/celements-search</url>
-    <tag>HEAD</tag>
+    <tag>celements-search-4.0</tag>
   </scm>
 </project>
