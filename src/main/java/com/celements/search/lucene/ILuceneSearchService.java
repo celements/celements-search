@@ -88,26 +88,25 @@ public interface ILuceneSearchService {
   public QueryRestriction createObjectRestriction(ClassReference classRef);
 
   /**
-   * @deprecated instead use {@link #createFieldRestriction(ClassField, Object)}
+   * @deprecated instead use {@link #createRestriction(ClassField, Object)}
    */
   @Deprecated
   public QueryRestriction createFieldRestriction(DocumentReference classRef, String field,
       String value);
 
-  public <T> QueryRestriction createFieldRestriction(ClassField<T> field, T value);
+  public <T> QueryRestriction createRestriction(ClassField<T> field, T value);
 
   /**
-   * @deprecated instead use {@link #createFieldRestriction(ClassField, Object, boolean)}
+   * @deprecated instead use {@link #createRestriction(ClassField, Object, boolean)}
    */
   @Deprecated
   public QueryRestriction createFieldRestriction(DocumentReference classRef, String field,
       String value, boolean tokenize);
 
-  public <T> QueryRestriction createFieldRestriction(ClassField<T> field, T value,
-      boolean tokenize);
+  public <T> QueryRestriction createRestriction(ClassField<T> field, T value, boolean tokenize);
 
   /**
-   * @deprecated instead use {@link #createFieldRestriction(ClassField, Object)} with a
+   * @deprecated instead use {@link #createRestriction(ClassField, Object)} with a
    *             {@link ReferenceField}
    */
   @Deprecated
@@ -136,8 +135,12 @@ public interface ILuceneSearchService {
   public QueryRestrictionGroup createAttachmentRestrictionGroup(List<String> mimeTypes,
       List<String> mimeTypesBlackList, List<String> filenamePrefs);
 
+  public LuceneSearchResult search(LuceneQuery query);
+
   public LuceneSearchResult search(LuceneQuery query, List<String> sortFields,
       List<String> languages);
+
+  public LuceneSearchResult searchWithoutChecks(LuceneQuery query);
 
   public LuceneSearchResult searchWithoutChecks(LuceneQuery query, List<String> sortFields,
       List<String> languages);

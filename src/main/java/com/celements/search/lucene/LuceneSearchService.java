@@ -208,8 +208,8 @@ public class LuceneSearchService implements ILuceneSearchService {
   }
 
   @Override
-  public <T> QueryRestriction createFieldRestriction(ClassField<T> field, T value) {
-    return createFieldRestriction(field, value, DEFAULT_TOKENIZE);
+  public <T> QueryRestriction createRestriction(ClassField<T> field, T value) {
+    return createRestriction(field, value, DEFAULT_TOKENIZE);
   }
 
   @Override
@@ -224,7 +224,7 @@ public class LuceneSearchService implements ILuceneSearchService {
   }
 
   @Override
-  public <T> QueryRestriction createFieldRestriction(ClassField<T> field, T value,
+  public <T> QueryRestriction createRestriction(ClassField<T> field, T value,
       boolean tokenize) {
     QueryRestriction restriction = null;
     if (field != null) {
@@ -335,9 +335,19 @@ public class LuceneSearchService implements ILuceneSearchService {
   }
 
   @Override
+  public LuceneSearchResult search(LuceneQuery query) {
+    return new LuceneSearchResult(query, null, null, false);
+  }
+
+  @Override
   public LuceneSearchResult search(LuceneQuery query, List<String> sortFields,
       List<String> languages) {
     return new LuceneSearchResult(query, sortFields, languages, false);
+  }
+
+  @Override
+  public LuceneSearchResult searchWithoutChecks(LuceneQuery query) {
+    return new LuceneSearchResult(query, null, null, true);
   }
 
   @Override
