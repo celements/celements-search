@@ -1,5 +1,6 @@
 package com.celements.search.lucene;
 
+import static com.celements.model.util.ReferenceSerializationMode.*;
 import static com.google.common.base.MoreObjects.*;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 
 import com.celements.model.util.ModelUtils;
+import com.celements.model.util.ReferenceSerializationMode;
 import com.celements.search.lucene.query.IQueryRestriction;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
@@ -62,11 +64,16 @@ public class LuceneUtils {
   }
 
   public static String exactify(EntityReference ref) {
-    return exactify(ref, true);
+    return exactify(ref, LOCAL);
   }
 
+  @Deprecated
   public static String exactify(EntityReference ref, boolean local) {
-    String ret = serialize(ref, local);
+    return exactify(ref, local ? LOCAL : GLOBAL);
+  }
+
+  public static String exactify(EntityReference ref, ReferenceSerializationMode mode) {
+    String ret = serialize(ref, mode);
     if (!spaceEndsWithDigit(ref)) {
       ret = exactify(ret);
     }
@@ -82,15 +89,16 @@ public class LuceneUtils {
   }
 
   public static String serialize(EntityReference ref) {
-    return serialize(ref, true);
+    return serialize(ref, LOCAL);
   }
 
+  @Deprecated
   public static String serialize(EntityReference ref, boolean local) {
-    if (ref != null) {
-      return local ? getModelUtils().serializeRefLocal(ref) : getModelUtils().serializeRef(ref);
-    } else {
-      return "";
-    }
+    return serialize(ref, local ? LOCAL : GLOBAL);
+  }
+
+  public static String serialize(EntityReference ref, ReferenceSerializationMode mode) {
+    return (ref != null) ? getModelUtils().serializeRef(ref, mode) : "";
   }
 
   public static IQueryRestriction buildRestrictionGroup(Type type, String valuesStr,
