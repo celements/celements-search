@@ -15,6 +15,8 @@ import org.xwiki.model.reference.SpaceReference;
 
 import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
+import com.celements.model.classes.fields.ClassField;
+import com.celements.model.classes.fields.ref.ReferenceField;
 import com.celements.search.lucene.query.IQueryRestriction;
 import com.celements.search.lucene.query.LuceneDocType;
 import com.celements.search.lucene.query.LuceneQuery;
@@ -39,14 +41,17 @@ public interface ILuceneSearchService {
   public Version getVersion();
 
   /**
-   * @return LuceneQuery object with type 'wikipage' only
+   * @return LuceneQuery object for current wiki with {@link LuceneDocType#DOC} only
    */
   public LuceneQuery createQuery();
 
   /**
+   * @deprecated instead use {@link #createQuery()} with
+   *             {@link LuceneQuery#setDocTypes(java.util.Collection)}
    * @param types
    *          e.g. 'wikipage' or 'attachment'
    */
+  @Deprecated
   public LuceneQuery createQuery(List<String> types);
 
   public DateFormat getSDF();
@@ -82,21 +87,30 @@ public interface ILuceneSearchService {
 
   public QueryRestriction createObjectRestriction(ClassReference classRef);
 
+  /**
+   * @deprecated instead use {@link #createFieldRestriction(ClassField, Object)}
+   */
+  @Deprecated
   public QueryRestriction createFieldRestriction(DocumentReference classRef, String field,
       String value);
 
+  public <T> QueryRestriction createFieldRestriction(ClassField<T> field, T value);
+
+  /**
+   * @deprecated instead use {@link #createFieldRestriction(ClassField, Object, boolean)}
+   */
+  @Deprecated
   public QueryRestriction createFieldRestriction(DocumentReference classRef, String field,
       String value, boolean tokenize);
 
+  public <T> QueryRestriction createFieldRestriction(ClassField<T> field, T value,
+      boolean tokenize);
+
   /**
-   * Creates a restriction for a class field which has a reference set as value.<br>
-   * NOTE: classRef must contain the same wikiRef as query
-   *
-   * @param classRef
-   * @param field
-   * @param ref
-   * @return
+   * @deprecated instead use {@link #createFieldRestriction(ClassField, Object)} with a
+   *             {@link ReferenceField}
    */
+  @Deprecated
   public IQueryRestriction createFieldRefRestriction(DocumentReference classRef, String field,
       EntityReference ref);
 

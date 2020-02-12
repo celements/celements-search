@@ -1,5 +1,6 @@
 package com.celements.search.lucene;
 
+import static com.celements.model.util.ReferenceSerializationMode.*;
 import static com.celements.search.lucene.LuceneUtils.*;
 
 import java.text.DateFormat;
@@ -9,6 +10,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +31,8 @@ import org.xwiki.model.reference.WikiReference;
 
 import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
+import com.celements.model.classes.fields.ClassField;
+import com.celements.model.classes.fields.CustomClassField;
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
 import com.celements.search.lucene.query.IQueryRestriction;
@@ -86,10 +90,14 @@ public class LuceneSearchService implements ILuceneSearchService {
 
   @Override
   public LuceneQuery createQuery() {
-    return new LuceneQuery(Arrays.asList(LucenePlugin.DOCTYPE_WIKIPAGE));
+    LuceneQuery query = new LuceneQuery();
+    query.setDocTypes(ImmutableList.of(LuceneDocType.DOC));
+    query.setWiki(context.getWikiRef());
+    return query;
   }
 
   @Override
+  @Deprecated
   public LuceneQuery createQuery(List<String> types) {
     if ((types == null) || types.isEmpty()) {
       types = Arrays.asList(LucenePlugin.DOCTYPE_WIKIPAGE, LucenePlugin.DOCTYPE_ATTACHMENT);
@@ -193,12 +201,19 @@ public class LuceneSearchService implements ILuceneSearchService {
   }
 
   @Override
+  @Deprecated
   public QueryRestriction createFieldRestriction(DocumentReference classRef, String field,
       String value) {
     return createFieldRestriction(classRef, field, value, DEFAULT_TOKENIZE);
   }
 
   @Override
+  public <T> QueryRestriction createFieldRestriction(ClassField<T> field, T value) {
+    return createFieldRestriction(field, value, DEFAULT_TOKENIZE);
+  }
+
+  @Override
+  @Deprecated
   public QueryRestriction createFieldRestriction(DocumentReference classRef, String field,
       String value, boolean tokenize) {
     QueryRestriction restriction = null;
@@ -209,18 +224,38 @@ public class LuceneSearchService implements ILuceneSearchService {
   }
 
   @Override
+  public <T> QueryRestriction createFieldRestriction(ClassField<T> field, T value,
+      boolean tokenize) {
+    QueryRestriction restriction = null;
+    if (field != null) {
+      restriction = createRestriction(field.serialize(), serializeClassFieldValue(field, value),
+          tokenize);
+    }
+    return restriction;
+  }
+
+  private <T> String serializeClassFieldValue(ClassField<T> field, T value) {
+    Object ret = value;
+    if (field instanceof CustomClassField) {
+      ret = ((CustomClassField<T>) field).serialize(value);
+    }
+    return Objects.toString(ret);
+  }
+
+  @Override
+  @Deprecated
   public IQueryRestriction createFieldRefRestriction(DocumentReference classRef, String field,
       EntityReference ref) {
     IQueryRestriction restriction = null;
     if ((classRef != null) && StringUtils.isNotBlank(field)) {
       String fieldStr = asFieldName(classRef, field);
       if (ref != null) {
-        restriction = createRestriction(fieldStr, exactify(ref, false));
+        restriction = createRestriction(fieldStr, exactify(ref, GLOBAL));
         if (classRef.getWikiReference().equals(modelUtils.extractRef(ref,
             WikiReference.class).orNull())) {
           QueryRestrictionGroup restrGrp = createRestrictionGroup(Type.OR);
           restrGrp.add(restriction);
-          restrGrp.add(createRestriction(fieldStr, exactify(ref)));
+          restrGrp.add(createRestriction(fieldStr, exactify(ref, LOCAL)));
           restriction = restrGrp;
         }
       } else {

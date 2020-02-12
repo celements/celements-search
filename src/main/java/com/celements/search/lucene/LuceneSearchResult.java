@@ -1,11 +1,12 @@
 package com.celements.search.lucene;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryParser.ParseException;
@@ -115,16 +116,17 @@ public class LuceneSearchResult {
 
   public <T extends EntityReference> List<T> getResults(Class<T> token)
       throws LuceneSearchException {
-    List<T> ret = new ArrayList<>();
-    for (SearchResult result : getSearchResultList()) {
-      try {
-        ret.add(References.cloneRef(result.getReference(), token));
-      } catch (IllegalArgumentException iae) {
-        throw new LuceneSearchException("Invalid token for query results", iae);
-      }
+    return streamResults(token).collect(Collectors.toList());
+  }
+
+  public <T extends EntityReference> Stream<T> streamResults(Class<T> token)
+      throws LuceneSearchException {
+    try {
+      return getSearchResultList().stream()
+          .map(result -> References.cloneRef(result.getReference(), token));
+    } catch (IllegalArgumentException iae) {
+      throw new LuceneSearchException("Invalid token for query results", iae);
     }
-    LOGGER.info("getResults: returning '{}' results for: {}", ret.size(), this);
-    return ret;
   }
 
   public Map<EntityReference, Float> getResultsScoreMap(int offset, int limit)
