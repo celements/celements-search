@@ -142,7 +142,7 @@ public class LuceneSearchServiceTest extends AbstractBridgedComponentTestCase {
 
   @Test
   public void testCreateRestriction_nullField() {
-    assertEquals("", searchService.createRestriction(null, "Hans").getQueryString());
+    assertEquals("", searchService.createRestriction((String) null, "Hans").getQueryString());
     assertEquals("", searchService.createRestriction("", "Hans").getQueryString());
   }
 
