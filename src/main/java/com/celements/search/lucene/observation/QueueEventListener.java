@@ -13,7 +13,6 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.observation.event.Event;
 
 import com.celements.common.observation.listener.AbstractRemoteEventListener;
-import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.util.ModelUtils;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -23,9 +22,6 @@ import com.xpn.xwiki.plugin.lucene.LucenePlugin;
 public class QueueEventListener extends AbstractRemoteEventListener<EntityReference, Void> {
 
   public static final String NAME = "celements.search.QueueEventListener";
-
-  @Requirement
-  private IModelAccessFacade modelAccess;
 
   @Requirement
   private ModelUtils modelUtils;
@@ -43,12 +39,16 @@ public class QueueEventListener extends AbstractRemoteEventListener<EntityRefere
   @Override
   protected void onEventInternal(Event event, EntityReference ref, Void data) {
     try {
-      if (ref instanceof DocumentReference) {
-        queueDocumentWithAttachments((DocumentReference) ref);
-      } else if (ref instanceof AttachmentReference) {
-        queueAttachment((AttachmentReference) ref);
+      if (isLucenePluginAvailable()) {
+        if (ref instanceof DocumentReference) {
+          queueDocumentWithAttachments((DocumentReference) ref);
+        } else if (ref instanceof AttachmentReference) {
+          queueAttachment((AttachmentReference) ref);
+        } else {
+          LOGGER.warn("unable to queue ref [{}]", defer(() -> modelUtils.serializeRef(ref)));
+        }
       } else {
-        LOGGER.warn("unable to queue ref [{}]", modelUtils.serializeRef(ref));
+        LOGGER.debug("LucenePlugin not available, first request");
       }
     } catch (DocumentNotExistsException dne) {
       LOGGER.warn("failed queing [{}]", modelUtils.serializeRef(ref), dne);
@@ -68,6 +68,14 @@ public class QueueEventListener extends AbstractRemoteEventListener<EntityRefere
     XWikiDocument doc = modelAccess.getDocument(attRef.getDocumentReference());
     getLucenePlugin().queueAttachment(doc, doc.getAttachment(attRef.getName()),
         context.getXWikiContext());
+  }
+
+  private boolean isLucenePluginAvailable() {
+    try {
+      return (getLucenePlugin() != null);
+    } catch (NullPointerException npe) {
+      return false;
+    }
   }
 
   private LucenePlugin getLucenePlugin() {
