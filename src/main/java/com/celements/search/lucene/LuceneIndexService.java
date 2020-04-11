@@ -1,5 +1,6 @@
 package com.celements.search.lucene;
 
+import static com.celements.logging.LogUtils.*;
 import static com.google.common.collect.ImmutableMap.*;
 import static java.util.function.Function.*;
 
@@ -64,7 +65,7 @@ public class LuceneIndexService implements ILuceneIndexService {
 
   @Override
   public CompletableFuture<Long> rebuildIndex(final EntityReference entityRef) {
-    LOGGER.info("rebuildIndex - start [{}]", entityRef);
+    LOGGER.info("rebuildIndex - start [{}]", defer(() -> modelUtils.serializeRef(entityRef)));
     return getLucenePlugin().rebuildIndex(entityRef);
   }
 
