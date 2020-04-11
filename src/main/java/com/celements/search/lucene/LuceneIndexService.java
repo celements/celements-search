@@ -1,23 +1,28 @@
 package com.celements.search.lucene;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import static com.google.common.collect.ImmutableMap.*;
+import static java.util.function.Function.*;
+
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
-import org.xwiki.context.Execution;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
+import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.ObservationManager;
 
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
+import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
 import com.celements.search.lucene.observation.LuceneQueueEvent;
+import com.google.common.collect.ImmutableMap;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
@@ -35,19 +40,17 @@ public class LuceneIndexService implements ILuceneIndexService {
   private ModelUtils modelUtils;
 
   @Requirement
-  private Execution execution;
-
-  private XWikiContext getContext() {
-    return (XWikiContext) execution.getContext().getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
-  }
+  private ModelContext context;
 
   @Override
+  @Deprecated
   public void queueForIndexing(DocumentReference docRef) throws DocumentLoadException,
       DocumentNotExistsException {
     queue(docRef);
   }
 
   @Override
+  @Deprecated
   public void queueForIndexing(XWikiDocument doc) {
     queue(doc.getDocumentReference());
   }
@@ -60,26 +63,31 @@ public class LuceneIndexService implements ILuceneIndexService {
   }
 
   @Override
-  public boolean rebuildIndexForAllWikis() {
-    LOGGER.info("rebuildIndexForAllWikis start '{}'");
-    return getLucenePlugin().rebuildIndex();
+  public CompletableFuture<Long> rebuildIndex(final EntityReference entityRef) {
+    LOGGER.info("rebuildIndex - start [{}]", entityRef);
+    return getLucenePlugin().rebuildIndex(entityRef);
   }
 
   @Override
-  public boolean rebuildIndex(Collection<WikiReference> wikiRefs) {
-    LOGGER.info("rebuildIndex start for wikiRefs '{}'", wikiRefs);
-    return getLucenePlugin().rebuildIndex(new ArrayList<>(wikiRefs), false);
+  public ImmutableMap<SpaceReference, CompletableFuture<Long>> rebuildIndexForWikiBySpace(
+      WikiReference wikiRef) {
+    return modelUtils.getAllSpaces(wikiRef).collect(toImmutableMap(identity(), this::rebuildIndex));
   }
 
   @Override
-  public boolean rebuildIndex(EntityReference entityRef) {
-    LOGGER.info("rebuildIndex start for entityRef '{}'", entityRef);
-    return getLucenePlugin().rebuildIndex(entityRef, false);
+  public ImmutableMap<SpaceReference, CompletableFuture<Long>> rebuildIndexForAllWikisBySpace() {
+    return modelUtils.getAllWikis().flatMap(modelUtils::getAllSpaces)
+        .collect(toImmutableMap(identity(), this::rebuildIndex));
   }
 
   @Override
-  public boolean rebuildIndexWithWipe() {
-    return getLucenePlugin().rebuildIndexWithWipe(null, false);
+  public ImmutableMap<WikiReference, CompletableFuture<Long>> rebuildIndexForAllWikis() {
+    return modelUtils.getAllWikis().collect(toImmutableMap(identity(), this::rebuildIndex));
+  }
+
+  @Override
+  public Optional<CompletableFuture<Long>> getLatestRebuildFuture() {
+    return getLucenePlugin().getLatestRebuildFuture();
   }
 
   @Override
@@ -88,7 +96,11 @@ public class LuceneIndexService implements ILuceneIndexService {
   }
 
   private LucenePlugin getLucenePlugin() {
-    return (LucenePlugin) getContext().getWiki().getPlugin("lucene", getContext());
+    return (LucenePlugin) getXContext().getWiki().getPlugin("lucene", getXContext());
+  }
+
+  private XWikiContext getXContext() {
+    return context.getXWikiContext();
   }
 
   /**

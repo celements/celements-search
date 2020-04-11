@@ -6,7 +6,6 @@ import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mutabilitydetector.internal.com.google.common.collect.ImmutableList;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
@@ -17,6 +16,7 @@ import com.celements.common.observation.listener.AbstractRemoteEventListener;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentNotExistsException;
+import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;

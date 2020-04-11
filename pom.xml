@@ -14,13 +14,13 @@
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-model</artifactId>
-      <version>4.2</version>
+      <version>4.3-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>celements-core</artifactId>
-      <version>4.3</version>
+      <version>4.4</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -31,7 +31,7 @@
     <dependency>
       <groupId>com.celements</groupId>
       <artifactId>xwiki-platform-search-lucene</artifactId>
-      <version>4.2</version>
+      <version>4.3-SNAPSHOT</version>
     </dependency>
   </dependencies>
   <scm>

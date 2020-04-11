@@ -51,7 +51,7 @@ public class QueueEventListener extends AbstractRemoteEventListener<EntityRefere
         LOGGER.debug("LucenePlugin not available, first request");
       }
     } catch (DocumentNotExistsException dne) {
-      LOGGER.warn("failed queing [{}]", modelUtils.serializeRef(ref), dne);
+      LOGGER.info("can't queue inexistend document [{}]", modelUtils.serializeRef(ref), dne);
     }
   }
 
