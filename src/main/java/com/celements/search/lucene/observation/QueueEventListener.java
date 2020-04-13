@@ -48,23 +48,23 @@ public class QueueEventListener extends AbstractRemoteEventListener<EntityRefere
           LOGGER.warn("unable to queue ref [{}]", defer(() -> modelUtils.serializeRef(ref)));
         }
       } else {
-        LOGGER.debug("LucenePlugin not available, first request");
+        LOGGER.warn("LucenePlugin not available, first request?");
       }
     } catch (DocumentNotExistsException dne) {
-      LOGGER.info("can't queue inexistend document [{}]", modelUtils.serializeRef(ref), dne);
+      LOGGER.debug("can't queue inexistend document [{}]", modelUtils.serializeRef(ref), dne);
     }
   }
 
   private void queueDocumentWithAttachments(DocumentReference docRef)
       throws DocumentNotExistsException {
-    LOGGER.info("adding to queue [{}]", defer(() -> modelUtils.serializeRef(docRef)));
+    LOGGER.debug("adding to queue [{}]", defer(() -> modelUtils.serializeRef(docRef)));
     XWikiDocument doc = modelAccess.getDocument(docRef);
     getLucenePlugin().queueDocument(doc, context.getXWikiContext());
     getLucenePlugin().queueAttachment(doc, context.getXWikiContext());
   }
 
   private void queueAttachment(AttachmentReference attRef) throws DocumentNotExistsException {
-    LOGGER.info("adding to queue [{}]", defer(() -> modelUtils.serializeRef(attRef)));
+    LOGGER.debug("adding to queue [{}]", defer(() -> modelUtils.serializeRef(attRef)));
     XWikiDocument doc = modelAccess.getDocument(attRef.getDocumentReference());
     getLucenePlugin().queueAttachment(doc, doc.getAttachment(attRef.getName()),
         context.getXWikiContext());
