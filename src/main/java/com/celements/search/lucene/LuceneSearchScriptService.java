@@ -17,11 +17,13 @@ import org.xwiki.script.service.ScriptService;
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
 import com.celements.rights.access.IRightsAccessFacadeRole;
+import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService;
+import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService.IndexRebuildFuture;
 import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.search.lucene.query.QueryRestriction;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
-import com.xpn.xwiki.plugin.lucene.IndexRebuilder.IndexRebuildFuture;
+import com.google.common.collect.ImmutableList;
 
 @Component(LuceneSearchScriptService.NAME)
 public class LuceneSearchScriptService implements ScriptService {
@@ -45,6 +47,9 @@ public class LuceneSearchScriptService implements ScriptService {
 
   @Requirement
   private ILuceneIndexService indexService;
+
+  @Requirement
+  private LuceneIndexRebuildService indexRebuildService;
 
   @Requirement
   private IRightsAccessFacadeRole rightsAccess;
@@ -214,11 +219,18 @@ public class LuceneSearchScriptService implements ScriptService {
     return ret;
   }
 
-  public IndexRebuildFuture getCurrentRebuildFuture() {
+  public IndexRebuildFuture getRunningIndexRebuild() {
     if (rightsAccess.isSuperAdmin()) {
-      return indexService.getCurrentRebuildFuture().orElse(null);
+      return indexRebuildService.getRunningRebuild().orElse(null);
     }
     return null;
+  }
+
+  public List<IndexRebuildFuture> getIndexRebuilds() {
+    if (rightsAccess.isSuperAdmin()) {
+      return indexRebuildService.getQueuedRebuilds();
+    }
+    return ImmutableList.of();
   }
 
   public int rebuildIndex() {
@@ -253,7 +265,7 @@ public class LuceneSearchScriptService implements ScriptService {
     int ret;
     if (!rightsAccess.isSuperAdmin()) {
       ret = REBUILD_NOT_ALLOWED;
-    } else if (indexService.getCurrentRebuildFuture().map(r -> !r.isDone()).orElse(false)) {
+    } else if (indexRebuildService.getRunningRebuild().isPresent()) {
       ret = REBUILD_ALREADY_IN_PROGRESS;
     } else {
       runnable.run();

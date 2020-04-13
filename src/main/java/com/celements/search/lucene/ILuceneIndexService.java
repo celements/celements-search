@@ -1,7 +1,5 @@
 package com.celements.search.lucene;
 
-import java.util.Optional;
-
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
@@ -12,9 +10,9 @@ import org.xwiki.model.reference.WikiReference;
 
 import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
+import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService.IndexRebuildFuture;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.plugin.lucene.IndexRebuilder.IndexRebuildFuture;
 
 @ComponentRole
 public interface ILuceneIndexService {
@@ -35,7 +33,7 @@ public interface ILuceneIndexService {
   void queue(@NotNull EntityReference ref);
 
   @NotNull
-  IndexRebuildFuture rebuildIndex(@Nullable EntityReference entityRef);
+  IndexRebuildFuture rebuildIndex(@Nullable EntityReference ref);
 
   @NotNull
   ImmutableList<IndexRebuildFuture> rebuildIndexForWikiBySpace(@NotNull WikiReference wikiRef);
@@ -45,8 +43,6 @@ public interface ILuceneIndexService {
 
   @NotNull
   ImmutableList<IndexRebuildFuture> rebuildIndexForAllWikisBySpace();
-
-  Optional<IndexRebuildFuture> getCurrentRebuildFuture();
 
   void optimizeIndex();
 

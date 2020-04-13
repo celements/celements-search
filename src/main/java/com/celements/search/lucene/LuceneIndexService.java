@@ -19,11 +19,13 @@ import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
+import com.celements.model.util.References;
+import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService;
+import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService.IndexRebuildFuture;
 import com.celements.search.lucene.observation.LuceneQueueEvent;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.plugin.lucene.IndexRebuilder.IndexRebuildFuture;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
 import com.xpn.xwiki.web.Utils;
 
@@ -40,6 +42,9 @@ public class LuceneIndexService implements ILuceneIndexService {
 
   @Requirement
   private ModelContext context;
+
+  @Requirement
+  private LuceneIndexRebuildService rebuildService;
 
   @Override
   @Deprecated
@@ -62,9 +67,11 @@ public class LuceneIndexService implements ILuceneIndexService {
   }
 
   @Override
-  public IndexRebuildFuture rebuildIndex(final EntityReference entityRef) {
-    LOGGER.info("rebuildIndex - start [{}]", defer(() -> modelUtils.serializeRef(entityRef)));
-    return getLucenePlugin().rebuildIndex(entityRef);
+  public IndexRebuildFuture rebuildIndex(EntityReference ref) {
+    EntityReference filterRef = Optional.ofNullable(ref).map(References::cloneRef)
+        .orElseGet(context::getWikiRef);
+    LOGGER.info("rebuildIndex - start [{}]", defer(() -> modelUtils.serializeRef(filterRef)));
+    return rebuildService.startIndexRebuild(filterRef);
   }
 
   @Override
@@ -81,11 +88,6 @@ public class LuceneIndexService implements ILuceneIndexService {
   public ImmutableList<IndexRebuildFuture> rebuildIndexForAllWikisBySpace() {
     return modelUtils.getAllWikis().flatMap(modelUtils::getAllSpaces).map(this::rebuildIndex)
         .collect(toImmutableList());
-  }
-
-  @Override
-  public Optional<IndexRebuildFuture> getCurrentRebuildFuture() {
-    return getLucenePlugin().getCurrentRebuildFuture();
   }
 
   @Override
