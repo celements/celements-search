@@ -21,6 +21,7 @@ import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.search.lucene.query.QueryRestriction;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
+import com.xpn.xwiki.plugin.lucene.IndexRebuilder.IndexRebuildFuture;
 
 @Component(LuceneSearchScriptService.NAME)
 public class LuceneSearchScriptService implements ScriptService {
@@ -204,13 +205,20 @@ public class LuceneSearchScriptService implements ScriptService {
     return searchService.getResultLimit(skipChecks);
   }
 
-  public boolean queueIndexing(DocumentReference docRef) {
+  public boolean queueIndexing(EntityReference ref) {
     boolean ret = false;
     if (rightsAccess.isAdmin()) {
-      indexService.queue(docRef);
+      indexService.queue(ref);
       ret = true;
     }
     return ret;
+  }
+
+  public IndexRebuildFuture getCurrentRebuildFuture() {
+    if (rightsAccess.isSuperAdmin()) {
+      return indexService.getCurrentRebuildFuture().orElse(null);
+    }
+    return null;
   }
 
   public int rebuildIndex() {
@@ -245,7 +253,7 @@ public class LuceneSearchScriptService implements ScriptService {
     int ret;
     if (!rightsAccess.isSuperAdmin()) {
       ret = REBUILD_NOT_ALLOWED;
-    } else if (indexService.getLatestRebuildFuture().map(r -> !r.isDone()).orElse(false)) {
+    } else if (indexService.getCurrentRebuildFuture().map(r -> !r.isDone()).orElse(false)) {
       ret = REBUILD_ALREADY_IN_PROGRESS;
     } else {
       runnable.run();

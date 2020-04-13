@@ -1,11 +1,9 @@
 package com.celements.search.lucene;
 
 import static com.celements.logging.LogUtils.*;
-import static com.google.common.collect.ImmutableMap.*;
-import static java.util.function.Function.*;
+import static com.google.common.collect.ImmutableList.*;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +11,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
-import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.ObservationManager;
 
@@ -23,9 +20,10 @@ import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
 import com.celements.search.lucene.observation.LuceneQueueEvent;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.plugin.lucene.IndexRebuilder.IndexRebuildFuture;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
 import com.xpn.xwiki.web.Utils;
 
@@ -64,31 +62,30 @@ public class LuceneIndexService implements ILuceneIndexService {
   }
 
   @Override
-  public CompletableFuture<Long> rebuildIndex(final EntityReference entityRef) {
+  public IndexRebuildFuture rebuildIndex(final EntityReference entityRef) {
     LOGGER.info("rebuildIndex - start [{}]", defer(() -> modelUtils.serializeRef(entityRef)));
     return getLucenePlugin().rebuildIndex(entityRef);
   }
 
   @Override
-  public ImmutableMap<SpaceReference, CompletableFuture<Long>> rebuildIndexForWikiBySpace(
-      WikiReference wikiRef) {
-    return modelUtils.getAllSpaces(wikiRef).collect(toImmutableMap(identity(), this::rebuildIndex));
+  public ImmutableList<IndexRebuildFuture> rebuildIndexForWikiBySpace(WikiReference wikiRef) {
+    return modelUtils.getAllSpaces(wikiRef).map(this::rebuildIndex).collect(toImmutableList());
   }
 
   @Override
-  public ImmutableMap<SpaceReference, CompletableFuture<Long>> rebuildIndexForAllWikisBySpace() {
-    return modelUtils.getAllWikis().flatMap(modelUtils::getAllSpaces)
-        .collect(toImmutableMap(identity(), this::rebuildIndex));
+  public ImmutableList<IndexRebuildFuture> rebuildIndexForAllWikis() {
+    return modelUtils.getAllWikis().map(this::rebuildIndex).collect(toImmutableList());
   }
 
   @Override
-  public ImmutableMap<WikiReference, CompletableFuture<Long>> rebuildIndexForAllWikis() {
-    return modelUtils.getAllWikis().collect(toImmutableMap(identity(), this::rebuildIndex));
+  public ImmutableList<IndexRebuildFuture> rebuildIndexForAllWikisBySpace() {
+    return modelUtils.getAllWikis().flatMap(modelUtils::getAllSpaces).map(this::rebuildIndex)
+        .collect(toImmutableList());
   }
 
   @Override
-  public Optional<CompletableFuture<Long>> getLatestRebuildFuture() {
-    return getLucenePlugin().getLatestRebuildFuture();
+  public Optional<IndexRebuildFuture> getCurrentRebuildFuture() {
+    return getLucenePlugin().getCurrentRebuildFuture();
   }
 
   @Override

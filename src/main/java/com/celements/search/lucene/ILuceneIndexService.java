@@ -1,7 +1,6 @@
 package com.celements.search.lucene;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -9,13 +8,13 @@ import javax.validation.constraints.NotNull;
 import org.xwiki.component.annotation.ComponentRole;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
-import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 
 import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.plugin.lucene.IndexRebuilder.IndexRebuildFuture;
 
 @ComponentRole
 public interface ILuceneIndexService {
@@ -36,19 +35,18 @@ public interface ILuceneIndexService {
   void queue(@NotNull EntityReference ref);
 
   @NotNull
-  CompletableFuture<Long> rebuildIndex(@Nullable EntityReference entityRef);
+  IndexRebuildFuture rebuildIndex(@Nullable EntityReference entityRef);
 
   @NotNull
-  ImmutableMap<SpaceReference, CompletableFuture<Long>> rebuildIndexForWikiBySpace(
-      @NotNull WikiReference wikiRef);
+  ImmutableList<IndexRebuildFuture> rebuildIndexForWikiBySpace(@NotNull WikiReference wikiRef);
 
   @NotNull
-  ImmutableMap<SpaceReference, CompletableFuture<Long>> rebuildIndexForAllWikisBySpace();
+  ImmutableList<IndexRebuildFuture> rebuildIndexForAllWikis();
 
   @NotNull
-  ImmutableMap<WikiReference, CompletableFuture<Long>> rebuildIndexForAllWikis();
+  ImmutableList<IndexRebuildFuture> rebuildIndexForAllWikisBySpace();
 
-  Optional<CompletableFuture<Long>> getLatestRebuildFuture();
+  Optional<IndexRebuildFuture> getCurrentRebuildFuture();
 
   void optimizeIndex();
 
