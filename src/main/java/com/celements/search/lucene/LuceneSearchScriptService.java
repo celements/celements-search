@@ -1,5 +1,6 @@
 package com.celements.search.lucene;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 
@@ -231,6 +232,18 @@ public class LuceneSearchScriptService implements ScriptService {
       return indexRebuildService.getQueuedRebuilds();
     }
     return ImmutableList.of();
+  }
+
+  public void pauseIndexRebuilder(Duration duration) {
+    if (rightsAccess.isSuperAdmin()) {
+      indexRebuildService.pause(duration);
+    }
+  }
+
+  public void unpauseIndexRebuilder() {
+    if (rightsAccess.isSuperAdmin()) {
+      indexRebuildService.unpause();
+    }
   }
 
   public int rebuildIndex() {
