@@ -36,7 +36,7 @@ public interface ILuceneIndexService {
   IndexRebuildFuture rebuildIndex(@Nullable EntityReference ref);
 
   @NotNull
-  ImmutableList<IndexRebuildFuture> rebuildIndexForWikiBySpace(@NotNull WikiReference wikiRef);
+  ImmutableList<IndexRebuildFuture> rebuildIndexForWikiBySpace(@Nullable WikiReference wikiRef);
 
   @NotNull
   ImmutableList<IndexRebuildFuture> rebuildIndexForAllWikis();

@@ -76,6 +76,7 @@ public class LuceneIndexService implements ILuceneIndexService {
 
   @Override
   public ImmutableList<IndexRebuildFuture> rebuildIndexForWikiBySpace(WikiReference wikiRef) {
+    wikiRef = Optional.ofNullable(wikiRef).orElseGet(context::getWikiRef);
     return modelUtils.getAllSpaces(wikiRef).map(this::rebuildIndex).collect(toImmutableList());
   }
 
