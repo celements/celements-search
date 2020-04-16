@@ -1,8 +1,10 @@
 package com.celements.search.lucene;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -254,11 +256,11 @@ public class LuceneSearchScriptService implements ScriptService {
     }
   }
 
-  public boolean isIndexRebuilderPaused() {
+  public Optional<Instant> isIndexRebuilderPaused() {
     if (rightsAccess.isAdmin()) {
       return indexRebuildService.isPaused();
     }
-    return false;
+    return Optional.empty();
   }
 
   public void unpauseIndexRebuilder() {
