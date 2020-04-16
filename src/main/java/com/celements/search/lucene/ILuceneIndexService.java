@@ -17,6 +17,8 @@ import com.xpn.xwiki.doc.XWikiDocument;
 @ComponentRole
 public interface ILuceneIndexService {
 
+  long getIndexSize();
+
   /**
    * @deprecated since 4.0 instead use {@link #queue(EntityReference)}
    */
@@ -31,6 +33,8 @@ public interface ILuceneIndexService {
   void queueForIndexing(@NotNull XWikiDocument doc);
 
   void queue(@NotNull EntityReference ref);
+
+  long getQueueSize();
 
   @NotNull
   IndexRebuildFuture rebuildIndex(@Nullable EntityReference ref);

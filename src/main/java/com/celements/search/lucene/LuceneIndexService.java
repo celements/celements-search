@@ -47,6 +47,11 @@ public class LuceneIndexService implements ILuceneIndexService {
   private LuceneIndexRebuildService rebuildService;
 
   @Override
+  public long getIndexSize() {
+    return getLucenePlugin().map(LucenePlugin::getLuceneDocCount).orElse(-1L);
+  }
+
+  @Override
   @Deprecated
   public void queueForIndexing(DocumentReference docRef) throws DocumentLoadException,
       DocumentNotExistsException {
@@ -64,6 +69,11 @@ public class LuceneIndexService implements ILuceneIndexService {
     if (ref != null) {
       getObservationManager().notify(new LuceneQueueEvent(), ref, null);
     }
+  }
+
+  @Override
+  public long getQueueSize() {
+    return getLucenePlugin().map(LucenePlugin::getQueueSize).orElse(-1L);
   }
 
   @Override
@@ -93,11 +103,16 @@ public class LuceneIndexService implements ILuceneIndexService {
 
   @Override
   public void optimizeIndex() {
-    getLucenePlugin().optimizeIndex();
+    getLucenePlugin().ifPresent(LucenePlugin::optimizeIndex);
   }
 
-  private LucenePlugin getLucenePlugin() {
-    return (LucenePlugin) getXContext().getWiki().getPlugin("lucene", getXContext());
+  private Optional<LucenePlugin> getLucenePlugin() {
+    try {
+      return Optional.of((LucenePlugin) getXContext().getWiki().getPlugin("lucene", getXContext()));
+    } catch (NullPointerException npe) {
+      LOGGER.warn("LucenePlugin not available, first request?");
+      return Optional.empty();
+    }
   }
 
   private XWikiContext getXContext() {

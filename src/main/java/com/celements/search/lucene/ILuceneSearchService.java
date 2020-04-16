@@ -2,6 +2,7 @@ package com.celements.search.lucene;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
@@ -31,7 +32,7 @@ import com.xpn.xwiki.plugin.lucene.IndexFields;
 public interface ILuceneSearchService {
 
   /**
-   * @deprecated NOT THREAD SAFE! instead use getSDF()
+   * @deprecated NOT THREAD SAFE! instead use {@link #getDateFormatter()}
    */
   @Deprecated
   public static final DateFormat SDF = new SimpleDateFormat("yyyyMMddHHmm");
@@ -54,7 +55,13 @@ public interface ILuceneSearchService {
   @Deprecated
   public LuceneQuery createQuery(List<String> types);
 
+  /**
+   * @deprecated since 4.3 instead use {@link #getDateFormatter()}
+   */
+  @Deprecated
   public DateFormat getSDF();
+
+  public DateTimeFormatter getDateFormatter();
 
   public QueryRestrictionGroup createRestrictionGroup(Type type);
 

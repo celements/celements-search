@@ -211,6 +211,13 @@ public class LuceneSearchScriptService implements ScriptService {
     return searchService.getResultLimit(skipChecks);
   }
 
+  public long getIndexSize() {
+    if (rightsAccess.isAdmin()) {
+      return indexService.getIndexSize();
+    }
+    return 0;
+  }
+
   public boolean queueIndexing(EntityReference ref) {
     boolean ret = false;
     if (rightsAccess.isAdmin()) {
@@ -220,15 +227,22 @@ public class LuceneSearchScriptService implements ScriptService {
     return ret;
   }
 
+  public long getQueueSize() {
+    if (rightsAccess.isLoggedIn()) {
+      return indexService.getQueueSize();
+    }
+    return 0;
+  }
+
   public IndexRebuildFuture getRunningIndexRebuild() {
-    if (rightsAccess.isSuperAdmin()) {
+    if (rightsAccess.isAdmin()) {
       return indexRebuildService.getRunningRebuild().orElse(null);
     }
     return null;
   }
 
   public List<IndexRebuildFuture> getIndexRebuilds() {
-    if (rightsAccess.isSuperAdmin()) {
+    if (rightsAccess.isAdmin()) {
       return indexRebuildService.getQueuedRebuilds();
     }
     return ImmutableList.of();
@@ -238,6 +252,13 @@ public class LuceneSearchScriptService implements ScriptService {
     if (rightsAccess.isSuperAdmin()) {
       indexRebuildService.pause(duration);
     }
+  }
+
+  public boolean isIndexRebuilderPaused() {
+    if (rightsAccess.isAdmin()) {
+      return indexRebuildService.isPaused();
+    }
+    return false;
   }
 
   public void unpauseIndexRebuilder() {

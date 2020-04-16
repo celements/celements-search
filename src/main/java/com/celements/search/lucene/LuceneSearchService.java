@@ -3,14 +3,15 @@ package com.celements.search.lucene;
 import static com.celements.model.util.ReferenceSerializationMode.*;
 import static com.celements.search.lucene.LuceneUtils.*;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +30,7 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 
+import com.celements.common.date.DateFormat;
 import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.classes.fields.ClassField;
@@ -45,6 +47,7 @@ import com.celements.search.lucene.query.QueryRestrictionString;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.IndexFields;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
@@ -73,8 +76,13 @@ public class LuceneSearchService implements ILuceneSearchService {
   private ModelContext context;
 
   @Override
-  public DateFormat getSDF() {
+  public java.text.DateFormat getSDF() {
     return new SimpleDateFormat("yyyyMMddHHmm");
+  }
+
+  @Override
+  public DateTimeFormatter getDateFormatter() {
+    return DateFormat.ofPattern("yyyyMMddHHmm");
   }
 
   @Override
@@ -375,7 +383,7 @@ public class LuceneSearchService implements ILuceneSearchService {
 
   @Override
   public int getResultLimit(boolean skipChecks) {
-    int limit = getLucenePlugin().getResultLimit(skipChecks, context.getXWikiContext());
+    int limit = getLucenePlugin().map(p -> p.getResultLimit(skipChecks, getXContext())).orElse(0);
     LOGGER.debug("getResultLimit: got '{}' for skipChecks '{}'", limit, skipChecks);
     return limit;
   }
@@ -393,9 +401,17 @@ public class LuceneSearchService implements ILuceneSearchService {
     luceneIndexService.queueForIndexing(doc);
   }
 
-  private LucenePlugin getLucenePlugin() {
-    return (LucenePlugin) context.getXWikiContext().getWiki().getPlugin("lucene",
-        context.getXWikiContext());
+  private Optional<LucenePlugin> getLucenePlugin() {
+    try {
+      return Optional.of((LucenePlugin) getXContext().getWiki().getPlugin("lucene", getXContext()));
+    } catch (NullPointerException npe) {
+      LOGGER.warn("LucenePlugin not available, first request?");
+      return Optional.empty();
+    }
+  }
+
+  private XWikiContext getXContext() {
+    return context.getXWikiContext();
   }
 
 }
