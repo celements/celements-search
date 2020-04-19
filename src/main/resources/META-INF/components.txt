@@ -13,3 +13,4 @@ com.celements.search.web.packages.AttachmentWebSearchPackage
 com.celements.search.web.WebSearchService
 com.celements.search.web.WebSearchScriptService
 com.celements.search.lucene.observation.QueueEventListener
+com.celements.search.provider.JobSearchProviderCloser
