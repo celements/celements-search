@@ -22,7 +22,7 @@ public class JobSearchProviderCloser implements PostJobAction {
 
   @Override
   public void accept(JobExecutionContext ctx) {
-    LOGGER.info("{}", ctx.getJobDetail());
+    LOGGER.info("close search providers for job: {}", ctx.getJobDetail());
     searchProviderManager.closeAllForCurrentThread();
   }
 
