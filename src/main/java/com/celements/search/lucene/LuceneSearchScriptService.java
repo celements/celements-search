@@ -301,8 +301,6 @@ public class LuceneSearchScriptService implements ScriptService {
     int ret;
     if (!rightsAccess.isSuperAdmin()) {
       ret = REBUILD_NOT_ALLOWED;
-    } else if (indexRebuildService.getRunningRebuild().isPresent()) {
-      ret = REBUILD_ALREADY_IN_PROGRESS;
     } else {
       runnable.run();
       ret = 0;
