@@ -1,11 +1,14 @@
 package com.celements.search.lucene.observation;
 
 import static com.celements.common.test.CelementsTestUtils.*;
+import static com.celements.search.lucene.observation.QueueEventListener.*;
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.xwiki.context.Execution;
+import org.xwiki.context.ExecutionContext;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
@@ -92,6 +95,44 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     replayDefault();
     listener.onEvent(new LuceneQueueEvent(), docRef, null);
     verifyDefault();
+  }
+
+  @Test
+  public void test_onEvent_eventNotification_enabled() throws Exception {
+    ExecutionContext ctx = Utils.getComponent(Execution.class).getContext();
+    DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
+    XWikiDocument doc = new XWikiDocument(docRef);
+    getMock(LucenePlugin.class).queueDocument(same(doc), same(getContext()));
+    getMock(LucenePlugin.class).queueAttachment(same(doc), same(getContext()));
+    expect(getMock(IModelAccessFacade.class).getDocument(docRef))
+        .andAnswer(() -> {
+          assertEquals(false, ctx.getProperty(KEY_DISABLE_EVENTS));
+          return doc;
+        });
+
+    replayDefault();
+    listener.onEvent(new LuceneQueueEvent(), docRef, null);
+    verifyDefault();
+  }
+
+  @Test
+  public void test_onEvent_eventNotification_disabled() throws Exception {
+    ExecutionContext ctx = Utils.getComponent(Execution.class).getContext();
+    DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
+    XWikiDocument doc = new XWikiDocument(docRef);
+    getMock(LucenePlugin.class).queueDocument(same(doc), same(getContext()));
+    getMock(LucenePlugin.class).queueAttachment(same(doc), same(getContext()));
+    expect(getMock(IModelAccessFacade.class).getDocument(docRef))
+        .andAnswer(() -> {
+          assertEquals(true, ctx.getProperty(KEY_DISABLE_EVENTS));
+          return doc;
+        });
+
+    ctx.setProperty(KEY_DISABLE_EVENTS, "KeepMe");
+    replayDefault();
+    listener.onEvent(new LuceneQueueEvent(), docRef, true);
+    verifyDefault();
+    assertEquals("KeepMe", ctx.getProperty(KEY_DISABLE_EVENTS));
   }
 
 }

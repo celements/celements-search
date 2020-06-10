@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
+import org.xwiki.context.Execution;
 import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
@@ -19,12 +20,17 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
 
 @Component(QueueEventListener.NAME)
-public class QueueEventListener extends AbstractRemoteEventListener<EntityReference, Void> {
+public class QueueEventListener extends AbstractRemoteEventListener<EntityReference, Boolean> {
 
   public static final String NAME = "celements.search.QueueEventListener";
 
+  static final String KEY_DISABLE_EVENTS = LucenePlugin.EXEC_DISABLE_EVENT_NOTIFICATION;
+
   @Requirement
   private ModelUtils modelUtils;
+
+  @Requirement
+  private Execution execution;
 
   @Override
   public String getName() {
@@ -37,18 +43,28 @@ public class QueueEventListener extends AbstractRemoteEventListener<EntityRefere
   }
 
   @Override
-  protected void onEventInternal(Event event, EntityReference ref, Void data) {
+  protected void onEventInternal(Event event, EntityReference ref, Boolean data) {
+    if (isLucenePluginAvailable()) {
+      Object before = execution.getContext().getProperty(KEY_DISABLE_EVENTS);
+      execution.getContext().setProperty(KEY_DISABLE_EVENTS, Boolean.TRUE.equals(data));
+      try {
+        queue(ref);
+      } finally {
+        execution.getContext().setProperty(KEY_DISABLE_EVENTS, before);
+      }
+    } else {
+      LOGGER.warn("LucenePlugin not available, first request?");
+    }
+  }
+
+  private void queue(EntityReference ref) {
     try {
-      if (isLucenePluginAvailable()) {
-        if (ref instanceof DocumentReference) {
-          queueDocumentWithAttachments((DocumentReference) ref);
-        } else if (ref instanceof AttachmentReference) {
-          queueAttachment((AttachmentReference) ref);
-        } else {
-          LOGGER.warn("unable to queue ref [{}]", defer(() -> modelUtils.serializeRef(ref)));
-        }
+      if (ref instanceof DocumentReference) {
+        queueDocumentWithAttachments((DocumentReference) ref);
+      } else if (ref instanceof AttachmentReference) {
+        queueAttachment((AttachmentReference) ref);
       } else {
-        LOGGER.warn("LucenePlugin not available, first request?");
+        LOGGER.warn("unable to queue ref [{}]", defer(() -> modelUtils.serializeRef(ref)));
       }
     } catch (DocumentNotExistsException dne) {
       LOGGER.debug("can't queue inexistend document [{}]", modelUtils.serializeRef(ref), dne);
