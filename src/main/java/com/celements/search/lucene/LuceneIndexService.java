@@ -67,7 +67,13 @@ public class LuceneIndexService implements ILuceneIndexService {
   @Override
   public void queue(EntityReference ref) {
     if (ref != null) {
-      getObservationManager().notify(new LuceneQueueEvent(), ref, null);
+      getObservationManager().notify(new LuceneQueueEvent(), ref, false);
+    }
+  }
+
+  public void queueWithoutNotifications(EntityReference ref) {
+    if (ref != null) {
+      getObservationManager().notify(new LuceneQueueEvent(), ref, true);
     }
   }
 
