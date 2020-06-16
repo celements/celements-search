@@ -3,10 +3,12 @@ package com.celements.search.lucene.observation;
 import static com.celements.common.MoreObjectsCel.*;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.AttachmentReference;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.observation.event.Event;
 
 import com.celements.model.reference.RefBuilder;
@@ -19,8 +21,7 @@ import com.xpn.xwiki.internal.event.AttachmentDeletedEvent;
 import com.xpn.xwiki.internal.event.AttachmentUpdatedEvent;
 
 @Component(QueueAttachmentEventConverter.NAME)
-public class QueueAttachmentEventConverter
-    extends AbstractQueueEventConverter<AttachmentReference, XWikiDocument> {
+public class QueueAttachmentEventConverter extends AbstractQueueEventConverter<XWikiDocument> {
 
   public static final String NAME = "LuceneQueueAttachmentEventConverter";
 
@@ -43,15 +44,15 @@ public class QueueAttachmentEventConverter
   }
 
   @Override
-  protected AttachmentReference getReference(Event event, XWikiDocument doc) {
+  protected Stream<EntityReference> getReferences(Event event, XWikiDocument doc) {
     AbstractAttachmentEvent attachEvent = (AbstractAttachmentEvent) event;
-    return RefBuilder.from(doc.getDocumentReference())
+    return Stream.of(RefBuilder.from(doc.getDocumentReference())
         .with(EntityType.ATTACHMENT, attachEvent.getName())
-        .build(AttachmentReference.class);
+        .build(AttachmentReference.class));
   }
 
   @Override
-  protected IndexQueuePriority getPriority(XWikiDocument doc) {
+  protected IndexQueuePriority getPriority(EntityReference ref) {
     return IndexQueuePriority.LOW;
   }
 

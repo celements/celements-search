@@ -65,6 +65,7 @@ public class QueueWikiEventConverterTest extends AbstractComponentTest {
   private QueueTask createQueueTaskMock() {
     QueueTask mock = createMockAndAddToDefault(QueueTask.class);
     expect(mock.priority(IndexQueuePriority.LOW)).andReturn(mock);
+    expect(mock.getReference()).andReturn(null).anyTimes();
     mock.queue();
     return mock;
   }

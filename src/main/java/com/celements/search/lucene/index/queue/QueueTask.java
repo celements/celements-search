@@ -18,8 +18,13 @@ public class QueueTask {
   private Boolean withoutNotifications;
 
   public QueueTask(EntityReference ref, LuceneQueueEvent event) {
+    System.err.println(ref);
     this.ref = requireNonNull(ref);
     this.event = requireNonNull(event);
+  }
+
+  public EntityReference getReference() {
+    return ref;
   }
 
   public QueueTask priority(IndexQueuePriority priority) {
@@ -51,6 +56,12 @@ public class QueueTask {
 
   private static ObservationManager getObservationManager() {
     return Utils.getComponent(ObservationManager.class);
+  }
+
+  @Override
+  public String toString() {
+    return "QueueTask [ref=" + ref + ", event=" + event + ", priority=" + getPriority()
+        + ", disableEventNotification=" + getDisableEventNotification() + "]";
   }
 
 }

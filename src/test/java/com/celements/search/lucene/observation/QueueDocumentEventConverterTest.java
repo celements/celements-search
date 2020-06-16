@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.bridge.event.DocumentDeletedEvent;
 import org.xwiki.bridge.event.DocumentUpdatedEvent;
+import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.EventListener;
 
@@ -17,6 +18,8 @@ import com.celements.common.test.AbstractComponentTest;
 import com.celements.search.lucene.ILuceneIndexService;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.celements.search.lucene.index.queue.QueueTask;
+import com.google.common.collect.ImmutableList;
+import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.web.Utils;
 
@@ -49,33 +52,53 @@ public class QueueDocumentEventConverterTest extends AbstractComponentTest {
   public void test_onEvent_created() throws Exception {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
-    expect(getMock(ILuceneIndexService.class).indexTask(docRef)).andReturn(createQueueTaskMock());
+    QueueTask docTask = createQueueTaskMock(null);
+    expect(getMock(ILuceneIndexService.class).indexTask(docRef)).andReturn(docTask);
 
-    replayDefault();
+    replayDefault(docTask);
     listener.onEvent(new DocumentCreatedEvent(), doc, null);
-    verifyDefault();
+    verifyDefault(docTask);
   }
 
   @Test
   public void test_onEvent_updated() throws Exception {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
-    expect(getMock(ILuceneIndexService.class).indexTask(docRef)).andReturn(createQueueTaskMock());
+    QueueTask docTask = createQueueTaskMock(null);
+    expect(getMock(ILuceneIndexService.class).indexTask(docRef)).andReturn(docTask);
 
-    replayDefault();
+    replayDefault(docTask);
     listener.onEvent(new DocumentUpdatedEvent(), doc, null);
-    verifyDefault();
+    verifyDefault(docTask);
   }
 
   @Test
   public void test_onEvent_deleted() throws Exception {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
-    expect(getMock(ILuceneIndexService.class).deleteTask(docRef)).andReturn(createQueueTaskMock());
+    QueueTask docTask = createQueueTaskMock(null);
+    expect(getMock(ILuceneIndexService.class).deleteTask(docRef)).andReturn(docTask);
 
-    replayDefault();
+    replayDefault(docTask);
     listener.onEvent(new DocumentDeletedEvent(), doc, null);
-    verifyDefault();
+    verifyDefault(docTask);
+  }
+
+  @Test
+  public void test_onEvent_withAtts() throws Exception {
+    DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
+    XWikiDocument doc = new XWikiDocument(docRef);
+    AttachmentReference attRef = new AttachmentReference("file", docRef);
+    XWikiAttachment att = new XWikiAttachment(doc, attRef.getName());
+    doc.setAttachmentList(ImmutableList.of(att));
+    QueueTask docTask = createQueueTaskMock(null);
+    expect(getMock(ILuceneIndexService.class).indexTask(docRef)).andReturn(docTask);
+    QueueTask attTask = createQueueTaskMock(IndexQueuePriority.LOW);
+    expect(getMock(ILuceneIndexService.class).indexTask(attRef)).andReturn(attTask);
+
+    replayDefault(docTask, attTask);
+    listener.onEvent(new DocumentUpdatedEvent(), doc, null);
+    verifyDefault(docTask, attTask);
   }
 
   @Test
@@ -83,20 +106,17 @@ public class QueueDocumentEventConverterTest extends AbstractComponentTest {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
     getContext().setDoc(doc);
-    expect(getMock(ILuceneIndexService.class).indexTask(docRef))
-        .andReturn(createQueueTaskMock(IndexQueuePriority.HIGHEST));
+    QueueTask mock = createQueueTaskMock(IndexQueuePriority.HIGHEST);
+    expect(getMock(ILuceneIndexService.class).indexTask(docRef)).andReturn(mock);
 
-    replayDefault();
+    replayDefault(mock);
     listener.onEvent(new DocumentUpdatedEvent(), doc, null);
-    verifyDefault();
-  }
-
-  private QueueTask createQueueTaskMock() {
-    return createQueueTaskMock(null);
+    verifyDefault(mock);
   }
 
   private QueueTask createQueueTaskMock(IndexQueuePriority prio) {
-    QueueTask mock = createMockAndAddToDefault(QueueTask.class);
+    QueueTask mock = createMock(QueueTask.class);
+    expect(mock.getReference()).andReturn(null).anyTimes();
     expect(mock.priority(prio)).andReturn(mock);
     mock.queue();
     return mock;

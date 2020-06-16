@@ -1,5 +1,7 @@
 package com.celements.search.lucene.observation;
 
+import java.util.stream.Stream;
+
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.observation.event.Event;
@@ -9,7 +11,7 @@ import com.celements.search.lucene.ILuceneIndexService;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.celements.search.lucene.index.queue.QueueTask;
 
-public abstract class AbstractQueueEventConverter<R extends EntityReference, S>
+public abstract class AbstractQueueEventConverter<S>
     extends AbstractLocalEventListener<S, Object> {
 
   @Requirement
@@ -17,22 +19,20 @@ public abstract class AbstractQueueEventConverter<R extends EntityReference, S>
 
   @Override
   protected void onEventInternal(Event event, S source, Object data) {
-    R reference = getReference(event, source);
-    QueueTask queueTask;
-    if (isDeleteEvent(event)) {
-      LOGGER.debug("notifying delete on [{}]", reference);
-      queueTask = indexService.deleteTask(reference);
-    } else {
-      LOGGER.debug("notifying index on [{}]", reference);
-      queueTask = indexService.indexTask(reference);
-    }
-    queueTask.priority(getPriority(source)).queue();
+    getReferences(event, source).forEach(reference -> {
+      QueueTask queueTask = isDeleteEvent(event)
+          ? indexService.deleteTask(reference)
+          : indexService.indexTask(reference);
+      queueTask.priority(getPriority(reference))
+          .queue();
+      LOGGER.debug("queued: [{}] ", queueTask);
+    });
   }
 
   protected abstract boolean isDeleteEvent(Event event);
 
-  protected abstract R getReference(Event event, S source);
+  protected abstract Stream<EntityReference> getReferences(Event event, S source);
 
-  protected abstract IndexQueuePriority getPriority(S source);
+  protected abstract IndexQueuePriority getPriority(EntityReference reference);
 
 }

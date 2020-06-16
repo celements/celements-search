@@ -3,12 +3,14 @@ package com.celements.search.lucene.observation;
 import static com.celements.common.MoreObjectsCel.*;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.xwiki.bridge.event.AbstractWikiEvent;
 import org.xwiki.bridge.event.WikiCreatedEvent;
 import org.xwiki.bridge.event.WikiDeletedEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.model.EntityType;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.event.Event;
 
@@ -17,7 +19,7 @@ import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.google.common.collect.ImmutableList;
 
 @Component(QueueWikiEventConverter.NAME)
-public class QueueWikiEventConverter extends AbstractQueueEventConverter<WikiReference, Object> {
+public class QueueWikiEventConverter extends AbstractQueueEventConverter<Object> {
 
   public static final String NAME = "LuceneQueueWikiEventConverter";
 
@@ -39,15 +41,15 @@ public class QueueWikiEventConverter extends AbstractQueueEventConverter<WikiRef
   }
 
   @Override
-  protected WikiReference getReference(Event event, Object source) {
+  protected Stream<EntityReference> getReferences(Event event, Object source) {
     AbstractWikiEvent wikiEvent = (AbstractWikiEvent) event;
-    return RefBuilder.create()
+    return Stream.of(RefBuilder.create()
         .with(EntityType.WIKI, wikiEvent.getWikiId())
-        .build(WikiReference.class);
+        .build(WikiReference.class));
   }
 
   @Override
-  protected IndexQueuePriority getPriority(Object source) {
+  protected IndexQueuePriority getPriority(EntityReference ref) {
     return IndexQueuePriority.LOW;
   }
 
