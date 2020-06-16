@@ -24,6 +24,7 @@ import com.celements.search.lucene.observation.event.LuceneQueueIndexEvent;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.plugin.lucene.AbstractIndexData;
 import com.xpn.xwiki.plugin.lucene.AttachmentData;
 import com.xpn.xwiki.plugin.lucene.DeleteData;
 import com.xpn.xwiki.plugin.lucene.DocumentData;
@@ -54,68 +55,41 @@ public class QueueEventListener
   @Override
   protected void onEventInternal(Event event, EntityReference ref,
       LuceneQueueEvent.Data eventData) {
-    if (isLucenePluginAvailable()) {
-      LOGGER.info("queue {}: [{}] with [{}]", event.getClass().getSimpleName(), ref, eventData);
-      queue((LuceneQueueEvent) event, ref, firstNonNull(eventData, LuceneQueueEvent.Data.DEFAULT));
-    } else {
-      LOGGER.warn("LucenePlugin not available, first request?");
-    }
-  }
-
-  private void queue(LuceneQueueEvent event, EntityReference ref, LuceneQueueEvent.Data eventData) {
     try {
+      LuceneQueueEvent queueEvent = (LuceneQueueEvent) event;
+      AbstractIndexData indexData = null;
       if (ref instanceof WikiReference) {
-        queueWiki((WikiReference) ref, event.isDelete(), eventData);
-      } else if (event.isDelete()) {
-        queueDelete(ref, eventData);
+        indexData = newWikiData((WikiReference) ref, queueEvent.isDelete());
+      } else if (queueEvent.isDelete()) {
+        indexData = newDeleteData(ref);
       } else if (ref instanceof QueueLangDocumentReference) {
-        queueDocument((QueueLangDocumentReference) ref, eventData);
+        QueueLangDocumentReference langDocRef = (QueueLangDocumentReference) ref;
+        indexData = newDocumentData(modelAccess.getDocument(langDocRef, langDocRef.getLang()
+            .orElse(null)));
       } else if (ref instanceof AttachmentReference) {
-        queueAttachment((AttachmentReference) ref, eventData);
+        AttachmentReference attRef = (AttachmentReference) ref;
+        indexData = newAttachmentData(modelAccess.getDocument(attRef.getDocumentReference())
+            .getAttachment(attRef.getName()));
       } else {
         LOGGER.warn("unable to queue ref [{}]", defer(() -> modelUtils.serializeRef(ref)));
       }
+      queue(indexData, firstNonNull(eventData, LuceneQueueEvent.Data.DEFAULT));
     } catch (DocumentNotExistsException dne) {
       LOGGER.debug("can't queue inexistent document [{}]", modelUtils.serializeRef(ref), dne);
     }
   }
 
-  private void queueWiki(WikiReference wikiRef, boolean delete, LuceneQueueEvent.Data eventData) {
-    LOGGER.info("queueWiki: [{}]", defer(() -> modelUtils.serializeRef(wikiRef)));
-    getLucenePlugin().queue(newWikiData(wikiRef, delete)
-        .setPriority(eventData.priority)
-        .disableObservationEventNotification(eventData.disableEventNotification));
-  }
-
-  private void queueDocument(QueueLangDocumentReference langDocRef, LuceneQueueEvent.Data eventData)
-      throws DocumentNotExistsException {
-    LOGGER.debug("queueDocument: [{}-{}]", defer(() -> modelUtils.serializeRef(langDocRef)),
-        langDocRef.getLang());
-    XWikiDocument doc = modelAccess.getDocument(langDocRef, langDocRef.getLang().orElse(null));
-    getLucenePlugin().queue(newDocumentData(doc)
-        .setPriority(eventData.priority)
-        .disableObservationEventNotification(eventData.disableEventNotification));
-  }
-
-  private void queueAttachment(AttachmentReference attRef, LuceneQueueEvent.Data eventData)
-      throws DocumentNotExistsException {
-    XWikiDocument doc = modelAccess.getDocument(attRef.getDocumentReference());
-    queueAttachment(doc.getAttachment(attRef.getName()), eventData);
-  }
-
-  private void queueAttachment(XWikiAttachment att, LuceneQueueEvent.Data eventData) {
-    LOGGER.debug("queueAttachment: [{}@{}]", defer(() -> modelUtils.serializeRef(
-        att.getDoc().getDocumentReference())), att.getFilename());
-    getLucenePlugin().queue(newAttachmentData(att)
-        .setPriority(eventData.priority)
-        .disableObservationEventNotification(eventData.disableEventNotification));
-  }
-
-  private void queueDelete(EntityReference ref, LuceneQueueEvent.Data eventData) {
-    LOGGER.debug("queueDelete: [{}]", defer(() -> modelUtils.serializeRef(ref)));
-    getLucenePlugin().queue(newDeleteData(ref)
-        .setPriority(eventData.priority)
-        .disableObservationEventNotification(eventData.disableEventNotification));
+  private void queue(AbstractIndexData indexData, LuceneQueueEvent.Data eventData) {
+    if (indexData != null) {
+      indexData.setPriority(eventData.priority);
+      indexData.disableObservationEventNotification(eventData.disableEventNotification);
+      LOGGER.info("queue: {}", indexData);
+      if (isLucenePluginAvailable()) {
+        getLucenePlugin().queue(indexData);
+      } else {
+        LOGGER.warn("LucenePlugin not available, first request?");
+      }
+    }
   }
 
   WikiData newWikiData(WikiReference wiki, boolean delete) {

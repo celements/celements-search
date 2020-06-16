@@ -1,10 +1,13 @@
 package com.celements.search.lucene.observation;
 
+import static org.glassfish.jersey.internal.guava.Predicates.*;
+
 import java.util.Optional;
 
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.ImmutableDocumentReference;
 
+import com.celements.model.util.ReferenceSerializationMode;
 import com.celements.search.lucene.observation.event.LuceneQueueEvent;
 import com.google.common.base.Strings;
 
@@ -21,11 +24,16 @@ class QueueLangDocumentReference extends ImmutableDocumentReference {
 
   QueueLangDocumentReference(DocumentReference docRef, String lang) {
     super(docRef);
-    this.lang = Strings.emptyToNull(lang);
+    this.lang = lang;
   }
 
   Optional<String> getLang() {
-    return Optional.ofNullable(lang);
+    return Optional.ofNullable(lang).filter(not(Strings::isNullOrEmpty));
+  }
+
+  @Override
+  public String toString() {
+    return serialize(ReferenceSerializationMode.GLOBAL) + "-" + lang;
   }
 
 }
