@@ -1,6 +1,5 @@
 package com.celements.search.lucene;
 
-import static com.celements.common.MoreObjectsCel.*;
 import static com.celements.logging.LogUtils.*;
 import static com.google.common.collect.ImmutableList.*;
 
@@ -14,7 +13,6 @@ import org.xwiki.context.Execution;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.WikiReference;
-import org.xwiki.observation.ObservationManager;
 
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentLoadException;
@@ -26,21 +24,16 @@ import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService;
 import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService.IndexRebuildFuture;
 import com.celements.search.lucene.observation.event.LuceneQueueDeleteEvent;
-import com.celements.search.lucene.observation.event.LuceneQueueEvent;
 import com.celements.search.lucene.observation.event.LuceneQueueIndexEvent;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
-import com.xpn.xwiki.web.Utils;
 
 @Component
 public class LuceneIndexService implements ILuceneIndexService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LuceneIndexService.class);
-
-  public static final String EXEC_QUEUE_PRIORITY = "lucene.index.queue.priority";
-  public static final String EXEC_DISABLE_EVENT_NOTIFICATION = "lucene.index.disableEventNotification";
 
   @Requirement
   private IModelAccessFacade modelAccess;
@@ -77,48 +70,17 @@ public class LuceneIndexService implements ILuceneIndexService {
 
   @Override
   public void queue(EntityReference ref) {
-    queue(ref, null, null);
+    indexTask(ref).queue();
   }
 
   @Override
-  public void queue(EntityReference ref, IndexQueuePriority priority) {
-    queue(ref, priority, null);
+  public QueueTask indexTask(EntityReference ref) {
+    return new QueueTask(ref, new LuceneQueueIndexEvent());
   }
 
   @Override
-  public void queue(EntityReference ref, IndexQueuePriority priority,
-      Boolean withoutNotifications) {
-    queue(new LuceneQueueIndexEvent(), ref, priority, withoutNotifications);
-  }
-
-  @Override
-  public void queueDelete(EntityReference ref) {
-    queue(ref, null, null);
-  }
-
-  @Override
-  public void queueDelete(EntityReference ref, IndexQueuePriority priority) {
-    queue(ref, priority, null);
-  }
-
-  @Override
-  public void queueDelete(EntityReference ref, IndexQueuePriority priority,
-      Boolean withoutNotifications) {
-    queue(new LuceneQueueDeleteEvent(), ref, priority, withoutNotifications);
-  }
-
-  private void queue(LuceneQueueEvent event, EntityReference ref, IndexQueuePriority priority,
-      Boolean disableEventNotification) {
-    if (ref != null) {
-      priority = Optional.ofNullable(priority)
-          .orElseGet(() -> getExecutionParam(EXEC_QUEUE_PRIORITY, IndexQueuePriority.class)
-          .orElse(LuceneQueueEvent.Data.DEFAULT.priority));
-      disableEventNotification = Optional.ofNullable(disableEventNotification)
-          .orElseGet(() -> getExecutionParam(EXEC_DISABLE_EVENT_NOTIFICATION, Boolean.class)
-          .orElse(LuceneQueueEvent.Data.DEFAULT.disableEventNotification));
-      getObservationManager().notify(event, ref,
-          new LuceneQueueEvent.Data(priority, disableEventNotification));
-    }
+  public QueueTask deleteTask(EntityReference ref) {
+    return new QueueTask(ref, new LuceneQueueDeleteEvent());
   }
 
   @Override
@@ -172,17 +134,6 @@ public class LuceneIndexService implements ILuceneIndexService {
 
   private XWikiContext getXContext() {
     return context.getXWikiContext();
-  }
-
-  private <T> Optional<T> getExecutionParam(String key, Class<T> type) {
-    return tryCast(execution.getContext().getProperty(key), type);
-  }
-
-  /**
-   * loaded lazily due to cyclic dependency
-   */
-  private ObservationManager getObservationManager() {
-    return Utils.getComponent(ObservationManager.class);
   }
 
 }

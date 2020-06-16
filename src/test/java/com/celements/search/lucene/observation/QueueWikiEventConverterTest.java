@@ -1,6 +1,7 @@
 package com.celements.search.lucene.observation;
 
 import static com.celements.common.test.CelementsTestUtils.*;
+import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
 
 import org.junit.Before;
@@ -13,6 +14,7 @@ import org.xwiki.observation.EventListener;
 import com.celements.common.observation.listener.AbstractEventListener;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.search.lucene.ILuceneIndexService;
+import com.celements.search.lucene.QueueTask;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.xpn.xwiki.web.Utils;
 
@@ -43,7 +45,7 @@ public class QueueWikiEventConverterTest extends AbstractComponentTest {
   @Test
   public void test_onEvent_created() throws Exception {
     WikiReference wikiRef = new WikiReference("wiki");
-    getMock(ILuceneIndexService.class).queue(wikiRef, IndexQueuePriority.LOW);
+    expect(getMock(ILuceneIndexService.class).indexTask(wikiRef)).andReturn(createQueueTaskMock());
 
     replayDefault();
     listener.onEvent(new WikiCreatedEvent(wikiRef.getName()), wikiRef, null);
@@ -53,11 +55,18 @@ public class QueueWikiEventConverterTest extends AbstractComponentTest {
   @Test
   public void test_onEvent_deleted() throws Exception {
     WikiReference wikiRef = new WikiReference("wiki");
-    getMock(ILuceneIndexService.class).queueDelete(wikiRef, IndexQueuePriority.LOW);
+    expect(getMock(ILuceneIndexService.class).deleteTask(wikiRef)).andReturn(createQueueTaskMock());
 
     replayDefault();
     listener.onEvent(new WikiDeletedEvent(wikiRef.getName()), wikiRef, null);
     verifyDefault();
+  }
+
+  private QueueTask createQueueTaskMock() {
+    QueueTask mock = createMockAndAddToDefault(QueueTask.class);
+    expect(mock.priority(IndexQueuePriority.LOW)).andReturn(mock);
+    mock.queue();
+    return mock;
   }
 
 }

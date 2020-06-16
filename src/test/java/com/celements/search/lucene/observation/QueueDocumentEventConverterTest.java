@@ -15,6 +15,7 @@ import org.xwiki.observation.EventListener;
 import com.celements.common.observation.listener.AbstractEventListener;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.search.lucene.ILuceneIndexService;
+import com.celements.search.lucene.QueueTask;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.web.Utils;
 
@@ -47,7 +48,7 @@ public class QueueDocumentEventConverterTest extends AbstractComponentTest {
   public void test_onEvent_created() throws Exception {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
-    getMock(ILuceneIndexService.class).queue(eq(docRef), isNull());
+    expect(getMock(ILuceneIndexService.class).indexTask(docRef)).andReturn(createQueueTaskMock());
 
     replayDefault();
     listener.onEvent(new DocumentCreatedEvent(), doc, null);
@@ -58,7 +59,7 @@ public class QueueDocumentEventConverterTest extends AbstractComponentTest {
   public void test_onEvent_updated() throws Exception {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
-    getMock(ILuceneIndexService.class).queue(eq(docRef), isNull());
+    expect(getMock(ILuceneIndexService.class).indexTask(docRef)).andReturn(createQueueTaskMock());
 
     replayDefault();
     listener.onEvent(new DocumentUpdatedEvent(), doc, null);
@@ -69,11 +70,18 @@ public class QueueDocumentEventConverterTest extends AbstractComponentTest {
   public void test_onEvent_deleted() throws Exception {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
-    getMock(ILuceneIndexService.class).queueDelete(eq(docRef), isNull());
+    expect(getMock(ILuceneIndexService.class).deleteTask(docRef)).andReturn(createQueueTaskMock());
 
     replayDefault();
     listener.onEvent(new DocumentDeletedEvent(), doc, null);
     verifyDefault();
+  }
+
+  private QueueTask createQueueTaskMock() {
+    QueueTask mock = createMockAndAddToDefault(QueueTask.class);
+    expect(mock.priority(isNull())).andReturn(mock);
+    mock.queue();
+    return mock;
   }
 
 }

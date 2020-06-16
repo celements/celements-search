@@ -6,6 +6,7 @@ import org.xwiki.observation.event.Event;
 
 import com.celements.common.observation.listener.AbstractLocalEventListener;
 import com.celements.search.lucene.ILuceneIndexService;
+import com.celements.search.lucene.QueueTask;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
 
 public abstract class AbstractQueueEventConverter<R extends EntityReference, S>
@@ -17,13 +18,15 @@ public abstract class AbstractQueueEventConverter<R extends EntityReference, S>
   @Override
   protected void onEventInternal(Event event, S source, Object data) {
     R reference = getReference(event, source);
+    QueueTask queueTask;
     if (isDeleteEvent(event)) {
       LOGGER.debug("notifying delete on [{}]", reference);
-      indexService.queueDelete(reference, getPriority());
+      queueTask = indexService.deleteTask(reference);
     } else {
       LOGGER.debug("notifying index on [{}]", reference);
-      indexService.queue(reference, getPriority());
+      queueTask = indexService.indexTask(reference);
     }
+    queueTask.priority(getPriority()).queue();
   }
 
   protected abstract boolean isDeleteEvent(Event event);

@@ -13,6 +13,7 @@ import org.xwiki.observation.EventListener;
 import com.celements.common.observation.listener.AbstractEventListener;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.search.lucene.ILuceneIndexService;
+import com.celements.search.lucene.QueueTask;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.internal.event.AttachmentAddedEvent;
 import com.xpn.xwiki.internal.event.AttachmentDeletedEvent;
@@ -49,7 +50,7 @@ public class QueueAttachmentEventConverterTest extends AbstractComponentTest {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
     AttachmentReference attRef = new AttachmentReference("file", docRef);
-    getMock(ILuceneIndexService.class).queue(eq(attRef), isNull());
+    expect(getMock(ILuceneIndexService.class).indexTask(attRef)).andReturn(createQueueTaskMock());
 
     replayDefault();
     listener.onEvent(new AttachmentAddedEvent("docName", attRef.getName()), doc, null);
@@ -61,7 +62,7 @@ public class QueueAttachmentEventConverterTest extends AbstractComponentTest {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
     AttachmentReference attRef = new AttachmentReference("file", docRef);
-    getMock(ILuceneIndexService.class).queue(eq(attRef), isNull());
+    expect(getMock(ILuceneIndexService.class).indexTask(attRef)).andReturn(createQueueTaskMock());
 
     replayDefault();
     listener.onEvent(new AttachmentUpdatedEvent("docName", attRef.getName()), doc, null);
@@ -73,11 +74,18 @@ public class QueueAttachmentEventConverterTest extends AbstractComponentTest {
     DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
     XWikiDocument doc = new XWikiDocument(docRef);
     AttachmentReference attRef = new AttachmentReference("file", docRef);
-    getMock(ILuceneIndexService.class).queueDelete(eq(attRef), isNull());
+    expect(getMock(ILuceneIndexService.class).deleteTask(attRef)).andReturn(createQueueTaskMock());
 
     replayDefault();
     listener.onEvent(new AttachmentDeletedEvent("docName", attRef.getName()), doc, null);
     verifyDefault();
+  }
+
+  private QueueTask createQueueTaskMock() {
+    QueueTask mock = createMockAndAddToDefault(QueueTask.class);
+    expect(mock.priority(isNull())).andReturn(mock);
+    mock.queue();
+    return mock;
   }
 
 }

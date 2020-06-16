@@ -23,6 +23,7 @@ import org.xwiki.script.service.ScriptService;
 
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
+import com.celements.rights.access.EAccessLevel;
 import com.celements.rights.access.IRightsAccessFacadeRole;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService;
@@ -31,6 +32,8 @@ import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.search.lucene.query.QueryRestriction;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
+import com.google.common.base.Enums;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 @Component(LuceneSearchScriptService.NAME)
@@ -234,6 +237,20 @@ public class LuceneSearchScriptService implements ScriptService {
     return ret;
   }
 
+  public QueueTask indexTask(EntityReference ref) {
+    if (rightsAccess.isLoggedIn() && rightsAccess.hasAccessLevel(ref, EAccessLevel.VIEW)) {
+      return indexService.indexTask(ref);
+    }
+    return null;
+  }
+
+  public QueueTask deleteTask(EntityReference ref) {
+    if (rightsAccess.isLoggedIn() && rightsAccess.hasAccessLevel(ref, EAccessLevel.EDIT)) {
+      return indexService.deleteTask(ref);
+    }
+    return null;
+  }
+
   public long getQueueSize() {
     if (rightsAccess.isLoggedIn()) {
       return indexService.getQueueSize();
@@ -247,6 +264,11 @@ public class LuceneSearchScriptService implements ScriptService {
           .collect(toImmutableMap(prio -> prio, prio -> indexService.getQueueSize(prio)));
     }
     return null;
+  }
+
+  public IndexQueuePriority getIndexQueuePriority(String prio) {
+    String name = Strings.nullToEmpty(prio).toUpperCase();
+    return Enums.getIfPresent(IndexQueuePriority.class, name).orNull();
   }
 
   public IndexRebuildFuture getRunningIndexRebuild() {
