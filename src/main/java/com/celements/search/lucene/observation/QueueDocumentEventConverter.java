@@ -44,7 +44,8 @@ public class QueueDocumentEventConverter extends AbstractQueueEventConverter<XWi
 
   @Override
   protected Stream<EntityReference> getReferences(Event event, XWikiDocument doc) {
-    return Stream.concat(Stream.of(doc.getDocumentReference()),
+    return Stream.concat(
+        Stream.of(new QueueLangDocumentReference(doc.getDocumentReference(), doc.getLanguage())),
         doc.getAttachmentList().stream()
             .filter(Objects::nonNull)
             .map(att -> new AttachmentReference(att.getFilename(), doc.getDocumentReference())));

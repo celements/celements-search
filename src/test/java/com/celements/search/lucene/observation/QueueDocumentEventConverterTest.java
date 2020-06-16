@@ -4,6 +4,8 @@ import static com.celements.common.test.CelementsTestUtils.*;
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
 
+import org.easymock.Capture;
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
@@ -112,6 +114,41 @@ public class QueueDocumentEventConverterTest extends AbstractComponentTest {
     replayDefault(mock);
     listener.onEvent(new DocumentUpdatedEvent(), doc, null);
     verifyDefault(mock);
+  }
+
+  @Test
+  public void test_onEvent_lang() throws Exception {
+    DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
+    XWikiDocument doc = new XWikiDocument(docRef);
+    doc.setLanguage("en");
+    QueueTask docTask = createQueueTaskMock(null);
+    Capture<DocumentReference> docRefCpt = EasyMock.newCapture();
+    expect(getMock(ILuceneIndexService.class).indexTask(capture(docRefCpt))).andReturn(docTask);
+
+    replayDefault(docTask);
+    listener.onEvent(new DocumentUpdatedEvent(), doc, null);
+    verifyDefault(docTask);
+
+    assertEquals(docRef, docRefCpt.getValue());
+    assertEquals(QueueLangDocumentReference.class, docRefCpt.getValue().getClass());
+    assertEquals("en", ((QueueLangDocumentReference) docRefCpt.getValue()).getLang().orElse(null));
+  }
+
+  @Test
+  public void test_onEvent_lang_noneSet() throws Exception {
+    DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
+    XWikiDocument doc = new XWikiDocument(docRef);
+    QueueTask docTask = createQueueTaskMock(null);
+    Capture<DocumentReference> docRefCpt = EasyMock.newCapture();
+    expect(getMock(ILuceneIndexService.class).indexTask(capture(docRefCpt))).andReturn(docTask);
+
+    replayDefault(docTask);
+    listener.onEvent(new DocumentUpdatedEvent(), doc, null);
+    verifyDefault(docTask);
+
+    assertEquals(docRef, docRefCpt.getValue());
+    assertEquals(QueueLangDocumentReference.class, docRefCpt.getValue().getClass());
+    assertNull(((QueueLangDocumentReference) docRefCpt.getValue()).getLang().orElse(null));
   }
 
   private QueueTask createQueueTaskMock(IndexQueuePriority prio) {

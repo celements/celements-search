@@ -18,7 +18,6 @@ public class QueueTask {
   private Boolean withoutNotifications;
 
   public QueueTask(EntityReference ref, LuceneQueueEvent event) {
-    System.err.println(ref);
     this.ref = requireNonNull(ref);
     this.event = requireNonNull(event);
   }

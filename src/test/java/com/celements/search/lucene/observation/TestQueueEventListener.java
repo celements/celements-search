@@ -26,7 +26,7 @@ public class TestQueueEventListener extends QueueEventListener {
   final AttachmentData attDataMock = createMockAndAddToDefault(AttachmentData.class);
   final List<XWikiAttachment> attsIndex = new ArrayList<>();
   final DeleteData deleteDataMock = createMockAndAddToDefault(DeleteData.class);
-  final List<EntityReference> delete = new ArrayList<>();
+  final List<String> delete = new ArrayList<>();
 
   public int allCapturedSize() {
     return docsIndex.size() + attsIndex.size() + wikisIndex.size() + delete.size();
@@ -35,7 +35,7 @@ public class TestQueueEventListener extends QueueEventListener {
   @Override
   WikiData newWikiData(WikiReference wiki, boolean delete) {
     if (delete) {
-      this.delete.add(wiki);
+      this.delete.add(super.newDeleteData(wiki).getId());
     } else {
       wikisIndex.add(wiki);
     }
@@ -56,7 +56,7 @@ public class TestQueueEventListener extends QueueEventListener {
 
   @Override
   DeleteData newDeleteData(EntityReference ref) {
-    delete.add(ref);
+    delete.add(super.newDeleteData(ref).getId());
     return deleteDataMock;
   }
 

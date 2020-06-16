@@ -1,5 +1,6 @@
 package com.celements.search.lucene.observation;
 
+import static com.celements.common.MoreObjectsCel.*;
 import static com.celements.logging.LogUtils.*;
 import static com.google.common.base.MoreObjects.*;
 
@@ -9,7 +10,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.AttachmentReference;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.observation.event.Event;
@@ -68,8 +68,8 @@ public class QueueEventListener
         queueWiki((WikiReference) ref, event.isDelete(), eventData);
       } else if (event.isDelete()) {
         queueDelete(ref, eventData);
-      } else if (ref instanceof DocumentReference) {
-        queueDocument((DocumentReference) ref, eventData);
+      } else if (ref instanceof QueueLangDocumentReference) {
+        queueDocument((QueueLangDocumentReference) ref, eventData);
       } else if (ref instanceof AttachmentReference) {
         queueAttachment((AttachmentReference) ref, eventData);
       } else {
@@ -87,10 +87,11 @@ public class QueueEventListener
         .disableObservationEventNotification(eventData.disableEventNotification));
   }
 
-  private void queueDocument(DocumentReference docRef, LuceneQueueEvent.Data eventData)
+  private void queueDocument(QueueLangDocumentReference langDocRef, LuceneQueueEvent.Data eventData)
       throws DocumentNotExistsException {
-    LOGGER.debug("queueDocument: [{}]", defer(() -> modelUtils.serializeRef(docRef)));
-    XWikiDocument doc = modelAccess.getDocument(docRef);
+    LOGGER.debug("queueDocument: [{}-{}]", defer(() -> modelUtils.serializeRef(langDocRef)),
+        langDocRef.getLang());
+    XWikiDocument doc = modelAccess.getDocument(langDocRef, langDocRef.getLang().orElse(null));
     getLucenePlugin().queue(newDocumentData(doc)
         .setPriority(eventData.priority)
         .disableObservationEventNotification(eventData.disableEventNotification));
@@ -131,15 +132,18 @@ public class QueueEventListener
 
   /**
    * docId for
-   * doc: 'wiki:space.doc',
+   * doc: 'wiki:space.doc.en',
    * att: 'wiki:space.doc.file.att.jpg'
    */
   DeleteData newDeleteData(EntityReference ref) {
-    String docId = modelUtils.serializeRef(References.extractRef(ref, EntityType.DOCUMENT).or(ref));
+    StringBuilder docId = new StringBuilder();
+    docId.append(modelUtils.serializeRef(References.extractRef(ref, EntityType.DOCUMENT).or(ref)));
+    tryCast(ref, QueueLangDocumentReference.class).ifPresent(
+        langRef -> docId.append('.').append(langRef.getLang().orElse("default")));
     if (ref.getType() == EntityType.ATTACHMENT) {
-      docId += ".file." + ref.getName();
+      docId.append(".file.").append(ref.getName());
     }
-    return new DeleteData(docId);
+    return new DeleteData(docId.toString());
   }
 
   private boolean isLucenePluginAvailable() {
