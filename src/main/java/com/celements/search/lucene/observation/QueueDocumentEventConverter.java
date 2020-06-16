@@ -11,6 +11,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.event.Event;
 
+import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.doc.XWikiDocument;
 
@@ -41,6 +42,14 @@ public class QueueDocumentEventConverter
   @Override
   protected DocumentReference getReference(Event event, XWikiDocument doc) {
     return doc.getDocumentReference();
+  }
+
+  @Override
+  protected IndexQueuePriority getPriority(XWikiDocument doc) {
+    boolean isContextDoc = context.getCurrentDocRef().toJavaUtil()
+        .map(docRef -> docRef.equals(doc.getDocumentReference()))
+        .orElse(false);
+    return isContextDoc ? IndexQueuePriority.HIGHEST : null;
   }
 
 }

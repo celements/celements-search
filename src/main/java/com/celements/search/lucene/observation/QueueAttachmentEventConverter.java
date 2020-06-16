@@ -10,6 +10,7 @@ import org.xwiki.model.reference.AttachmentReference;
 import org.xwiki.observation.event.Event;
 
 import com.celements.model.reference.RefBuilder;
+import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.internal.event.AbstractAttachmentEvent;
@@ -47,6 +48,11 @@ public class QueueAttachmentEventConverter
     return RefBuilder.from(doc.getDocumentReference())
         .with(EntityType.ATTACHMENT, attachEvent.getName())
         .build(AttachmentReference.class);
+  }
+
+  @Override
+  protected IndexQueuePriority getPriority(XWikiDocument doc) {
+    return IndexQueuePriority.LOW;
   }
 
 }

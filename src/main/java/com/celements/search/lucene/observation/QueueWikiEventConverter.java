@@ -47,7 +47,7 @@ public class QueueWikiEventConverter extends AbstractQueueEventConverter<WikiRef
   }
 
   @Override
-  protected IndexQueuePriority getPriority() {
+  protected IndexQueuePriority getPriority(Object source) {
     return IndexQueuePriority.LOW;
   }
 

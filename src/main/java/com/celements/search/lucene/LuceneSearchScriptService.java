@@ -35,6 +35,7 @@ import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.google.common.base.Enums;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Ordering;
 
 @Component(LuceneSearchScriptService.NAME)
 public class LuceneSearchScriptService implements ScriptService {
@@ -261,6 +262,7 @@ public class LuceneSearchScriptService implements ScriptService {
   public Map<IndexQueuePriority, Long> getQueueSizes() {
     if (rightsAccess.isLoggedIn()) {
       return Stream.of(IndexQueuePriority.values())
+          .sorted(Ordering.natural().reversed())
           .collect(toImmutableMap(prio -> prio, prio -> indexService.getQueueSize(prio)));
     }
     return null;

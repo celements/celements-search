@@ -26,15 +26,13 @@ public abstract class AbstractQueueEventConverter<R extends EntityReference, S>
       LOGGER.debug("notifying index on [{}]", reference);
       queueTask = indexService.indexTask(reference);
     }
-    queueTask.priority(getPriority()).queue();
+    queueTask.priority(getPriority(source)).queue();
   }
 
   protected abstract boolean isDeleteEvent(Event event);
 
   protected abstract R getReference(Event event, S source);
 
-  protected IndexQueuePriority getPriority() {
-    return null;
-  }
+  protected abstract IndexQueuePriority getPriority(S source);
 
 }
