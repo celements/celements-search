@@ -17,6 +17,7 @@ import com.celements.common.observation.listener.AbstractRemoteEventListener;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.util.ModelUtils;
 import com.celements.search.lucene.observation.event.LuceneQueueDeleteEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueEvent;
 import com.celements.search.lucene.observation.event.LuceneQueueIndexEvent;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.doc.XWikiAttachment;

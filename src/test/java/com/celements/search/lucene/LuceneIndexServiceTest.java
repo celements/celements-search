@@ -15,8 +15,8 @@ import org.xwiki.observation.ObservationManager;
 
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
-import com.celements.search.lucene.observation.LuceneQueueEvent;
 import com.celements.search.lucene.observation.event.LuceneQueueDeleteEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueEvent;
 import com.celements.search.lucene.observation.event.LuceneQueueIndexEvent;
 import com.xpn.xwiki.web.Utils;
 

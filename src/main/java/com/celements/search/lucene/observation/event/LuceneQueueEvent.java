@@ -1,4 +1,4 @@
-package com.celements.search.lucene.observation;
+package com.celements.search.lucene.observation.event;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -11,7 +11,7 @@ import com.celements.search.lucene.index.queue.IndexQueuePriority;
 @Remote
 public abstract class LuceneQueueEvent extends AbstractFilterableEvent {
 
-  private static final long serialVersionUID = 1562264153098581700L;
+  private static final long serialVersionUID = -6212603792221276769L;
 
   public LuceneQueueEvent() {
     super();

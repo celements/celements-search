@@ -18,6 +18,7 @@ import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.celements.search.lucene.observation.event.LuceneQueueDeleteEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueEvent;
 import com.celements.search.lucene.observation.event.LuceneQueueIndexEvent;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.doc.XWikiAttachment;
