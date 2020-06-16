@@ -13,7 +13,8 @@ import org.xwiki.observation.EventListener;
 import com.celements.common.observation.listener.AbstractEventListener;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.search.lucene.ILuceneIndexService;
-import com.celements.search.lucene.QueueTask;
+import com.celements.search.lucene.index.queue.IndexQueuePriority;
+import com.celements.search.lucene.index.queue.QueueTask;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.internal.event.AttachmentAddedEvent;
 import com.xpn.xwiki.internal.event.AttachmentDeletedEvent;
@@ -83,7 +84,7 @@ public class QueueAttachmentEventConverterTest extends AbstractComponentTest {
 
   private QueueTask createQueueTaskMock() {
     QueueTask mock = createMockAndAddToDefault(QueueTask.class);
-    expect(mock.priority(isNull())).andReturn(mock);
+    expect(mock.priority(IndexQueuePriority.LOW)).andReturn(mock);
     mock.queue();
     return mock;
   }

@@ -21,6 +21,7 @@ import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
 import com.celements.model.util.References;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
+import com.celements.search.lucene.index.queue.QueueTask;
 import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService;
 import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService.IndexRebuildFuture;
 import com.celements.search.lucene.observation.event.LuceneQueueDeleteEvent;

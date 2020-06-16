@@ -6,8 +6,8 @@ import org.xwiki.observation.event.Event;
 
 import com.celements.common.observation.listener.AbstractLocalEventListener;
 import com.celements.search.lucene.ILuceneIndexService;
-import com.celements.search.lucene.QueueTask;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
+import com.celements.search.lucene.index.queue.QueueTask;
 
 public abstract class AbstractQueueEventConverter<R extends EntityReference, S>
     extends AbstractLocalEventListener<S, Object> {

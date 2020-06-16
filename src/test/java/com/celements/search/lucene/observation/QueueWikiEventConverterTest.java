@@ -14,8 +14,8 @@ import org.xwiki.observation.EventListener;
 import com.celements.common.observation.listener.AbstractEventListener;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.search.lucene.ILuceneIndexService;
-import com.celements.search.lucene.QueueTask;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
+import com.celements.search.lucene.index.queue.QueueTask;
 import com.xpn.xwiki.web.Utils;
 
 public class QueueWikiEventConverterTest extends AbstractComponentTest {

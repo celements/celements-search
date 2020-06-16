@@ -15,7 +15,8 @@ import org.xwiki.observation.EventListener;
 import com.celements.common.observation.listener.AbstractEventListener;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.search.lucene.ILuceneIndexService;
-import com.celements.search.lucene.QueueTask;
+import com.celements.search.lucene.index.queue.IndexQueuePriority;
+import com.celements.search.lucene.index.queue.QueueTask;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.web.Utils;
 
@@ -77,9 +78,26 @@ public class QueueDocumentEventConverterTest extends AbstractComponentTest {
     verifyDefault();
   }
 
+  @Test
+  public void test_onEvent_contextDoc() throws Exception {
+    DocumentReference docRef = new DocumentReference("wiki", "space", "doc");
+    XWikiDocument doc = new XWikiDocument(docRef);
+    getContext().setDoc(doc);
+    expect(getMock(ILuceneIndexService.class).indexTask(docRef))
+        .andReturn(createQueueTaskMock(IndexQueuePriority.HIGHEST));
+
+    replayDefault();
+    listener.onEvent(new DocumentUpdatedEvent(), doc, null);
+    verifyDefault();
+  }
+
   private QueueTask createQueueTaskMock() {
+    return createQueueTaskMock(null);
+  }
+
+  private QueueTask createQueueTaskMock(IndexQueuePriority prio) {
     QueueTask mock = createMockAndAddToDefault(QueueTask.class);
-    expect(mock.priority(isNull())).andReturn(mock);
+    expect(mock.priority(prio)).andReturn(mock);
     mock.queue();
     return mock;
   }

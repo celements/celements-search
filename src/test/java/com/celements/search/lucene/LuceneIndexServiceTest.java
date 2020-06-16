@@ -22,6 +22,9 @@ import com.xpn.xwiki.web.Utils;
 
 public class LuceneIndexServiceTest extends AbstractComponentTest {
 
+  static final String EXEC_QUEUE_PRIORITY = "lucene.index.queue.priority";
+  static final String EXEC_DISABLE_EVENT_NOTIFICATION = "lucene.index.disableEventNotification";
+
   private LuceneIndexService service;
   private EntityReference ref;
   private ObservationManager observationManagerMock;
@@ -46,9 +49,9 @@ public class LuceneIndexServiceTest extends AbstractComponentTest {
   @Test
   public void test_queue_fromExec() {
     IndexQueuePriority prio = IndexQueuePriority.HIGH;
-    setExecParam(QueueTask.EXEC_QUEUE_PRIORITY, prio);
+    setExecParam(EXEC_QUEUE_PRIORITY, prio);
     boolean disableEventNotification = true;
-    setExecParam(QueueTask.EXEC_DISABLE_EVENT_NOTIFICATION, disableEventNotification);
+    setExecParam(EXEC_DISABLE_EVENT_NOTIFICATION, disableEventNotification);
     Capture<LuceneQueueEvent.Data> data = EasyMock.newCapture();
     observationManagerMock.notify(isA(LuceneQueueIndexEvent.class), same(ref), capture(data));
     replayDefault();
@@ -71,13 +74,13 @@ public class LuceneIndexServiceTest extends AbstractComponentTest {
   @Test
   public void test_queue_prio_fromExec() {
     IndexQueuePriority prio = IndexQueuePriority.HIGH;
-    setExecParam(QueueTask.EXEC_QUEUE_PRIORITY, IndexQueuePriority.LOW);
+    setExecParam(EXEC_QUEUE_PRIORITY, prio);
     boolean disableEventNotification = true;
-    setExecParam(QueueTask.EXEC_DISABLE_EVENT_NOTIFICATION, disableEventNotification);
+    setExecParam(EXEC_DISABLE_EVENT_NOTIFICATION, disableEventNotification);
     Capture<LuceneQueueEvent.Data> data = EasyMock.newCapture();
     observationManagerMock.notify(isA(LuceneQueueIndexEvent.class), same(ref), capture(data));
     replayDefault();
-    service.indexTask(ref).priority(prio).queue();
+    service.indexTask(ref).priority(IndexQueuePriority.LOW).queue();
     verifyDefault();
     assertEquals(new LuceneQueueEvent.Data(prio, disableEventNotification), data.getValue());
   }
@@ -95,14 +98,14 @@ public class LuceneIndexServiceTest extends AbstractComponentTest {
   @Test
   public void test_queue_withoutNotifications_fromExec() {
     IndexQueuePriority prio = IndexQueuePriority.HIGH;
-    setExecParam(QueueTask.EXEC_QUEUE_PRIORITY, prio);
-    setExecParam(QueueTask.EXEC_DISABLE_EVENT_NOTIFICATION, false);
+    setExecParam(EXEC_QUEUE_PRIORITY, prio);
+    setExecParam(EXEC_DISABLE_EVENT_NOTIFICATION, false);
     Capture<LuceneQueueEvent.Data> data = EasyMock.newCapture();
     observationManagerMock.notify(isA(LuceneQueueIndexEvent.class), same(ref), capture(data));
     replayDefault();
     service.indexTask(ref).withoutNotifications().queue();
     verifyDefault();
-    assertEquals(new LuceneQueueEvent.Data(prio, true), data.getValue());
+    assertEquals(new LuceneQueueEvent.Data(prio, false), data.getValue());
   }
 
   @Test
@@ -119,14 +122,14 @@ public class LuceneIndexServiceTest extends AbstractComponentTest {
   @Test
   public void test_queue_withoutNotifications_prio_fromExec() {
     IndexQueuePriority prio = IndexQueuePriority.HIGH;
-    setExecParam(QueueTask.EXEC_QUEUE_PRIORITY, IndexQueuePriority.LOW);
-    setExecParam(QueueTask.EXEC_DISABLE_EVENT_NOTIFICATION, false);
+    setExecParam(EXEC_QUEUE_PRIORITY, prio);
+    setExecParam(EXEC_DISABLE_EVENT_NOTIFICATION, false);
     Capture<LuceneQueueEvent.Data> data = EasyMock.newCapture();
     observationManagerMock.notify(isA(LuceneQueueIndexEvent.class), same(ref), capture(data));
     replayDefault();
-    service.indexTask(ref).priority(prio).withoutNotifications().queue();
+    service.indexTask(ref).priority(IndexQueuePriority.LOW).withoutNotifications().queue();
     verifyDefault();
-    assertEquals(new LuceneQueueEvent.Data(prio, true), data.getValue());
+    assertEquals(new LuceneQueueEvent.Data(prio, false), data.getValue());
   }
 
   @Test
