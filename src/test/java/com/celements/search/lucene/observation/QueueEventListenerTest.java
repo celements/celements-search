@@ -125,7 +125,7 @@ public class QueueEventListenerTest extends AbstractComponentTest {
 
   @Test
   public void test_onEvent_attRef_otherEventData() throws Exception {
-    expect(getMock(IModelAccessFacade.class).getDocument(doc.getDocumentReference()))
+    expect(getMock(IModelAccessFacade.class).getOrCreateDocument(doc.getDocumentReference()))
         .andReturn(doc);
     AttachmentReference attRef = new AttachmentReference("att.jpg", doc.getDocumentReference());
     XWikiAttachment att = new XWikiAttachment(doc, attRef.getName());
@@ -144,7 +144,7 @@ public class QueueEventListenerTest extends AbstractComponentTest {
 
   @Test
   public void test_onEvent_attRef() throws Exception {
-    expect(getMock(IModelAccessFacade.class).getDocument(doc.getDocumentReference()))
+    expect(getMock(IModelAccessFacade.class).getOrCreateDocument(doc.getDocumentReference()))
         .andReturn(doc);
     AttachmentReference attRef = new AttachmentReference("att.jpg", doc.getDocumentReference());
     XWikiAttachment att = new XWikiAttachment(doc, attRef.getName());
