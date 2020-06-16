@@ -26,6 +26,8 @@ import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService;
 import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService.IndexRebuildFuture;
 import com.celements.search.lucene.observation.LuceneQueueEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueDeleteEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueIndexEvent;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -84,16 +86,28 @@ public class LuceneIndexService implements ILuceneIndexService {
   }
 
   @Override
-  public void queueWithoutNotifications(EntityReference ref) {
-    queue(ref, null, true);
+  public void queue(EntityReference ref, IndexQueuePriority priority,
+      Boolean withoutNotifications) {
+    queue(new LuceneQueueIndexEvent(), ref, priority, withoutNotifications);
   }
 
   @Override
-  public void queueWithoutNotifications(EntityReference ref, IndexQueuePriority priority) {
-    queue(ref, priority, true);
+  public void queueDelete(EntityReference ref) {
+    queue(ref, null, null);
   }
 
-  private void queue(EntityReference ref, IndexQueuePriority priority,
+  @Override
+  public void queueDelete(EntityReference ref, IndexQueuePriority priority) {
+    queue(ref, priority, null);
+  }
+
+  @Override
+  public void queueDelete(EntityReference ref, IndexQueuePriority priority,
+      Boolean withoutNotifications) {
+    queue(new LuceneQueueDeleteEvent(), ref, priority, withoutNotifications);
+  }
+
+  private void queue(LuceneQueueEvent event, EntityReference ref, IndexQueuePriority priority,
       Boolean disableEventNotification) {
     if (ref != null) {
       priority = Optional.ofNullable(priority)
@@ -102,7 +116,6 @@ public class LuceneIndexService implements ILuceneIndexService {
       disableEventNotification = Optional.ofNullable(disableEventNotification)
           .orElseGet(() -> getExecutionParam(EXEC_DISABLE_EVENT_NOTIFICATION, Boolean.class)
           .orElse(LuceneQueueEvent.Data.DEFAULT.disableEventNotification));
-      LuceneQueueEvent event = new LuceneQueueEvent();
       getObservationManager().notify(event, ref,
           new LuceneQueueEvent.Data(priority, disableEventNotification));
     }

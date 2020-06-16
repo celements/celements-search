@@ -9,17 +9,19 @@ import com.celements.common.observation.converter.Remote;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
 
 @Remote
-public class LuceneQueueEvent extends AbstractFilterableEvent {
+public abstract class LuceneQueueEvent extends AbstractFilterableEvent {
 
-  private static final long serialVersionUID = -6212603792221276769L;
+  private static final long serialVersionUID = 1562264153098581700L;
 
   public LuceneQueueEvent() {
     super();
   }
 
+  public abstract boolean isDelete();
+
   public static class Data implements Serializable {
 
-    private static final long serialVersionUID = -9175347513638637434L;
+    private static final long serialVersionUID = 3836590510200869274L;
 
     public static final Data DEFAULT = new Data(IndexQueuePriority.DEFAULT, false);
 
@@ -33,7 +35,7 @@ public class LuceneQueueEvent extends AbstractFilterableEvent {
 
     @Override
     public int hashCode() {
-      return Objects.hash(disableEventNotification, priority);
+      return Objects.hash(priority, disableEventNotification);
     }
 
     @Override

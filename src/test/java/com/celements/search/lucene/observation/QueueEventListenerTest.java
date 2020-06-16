@@ -17,6 +17,8 @@ import com.celements.common.test.AbstractComponentTest;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
+import com.celements.search.lucene.observation.event.LuceneQueueDeleteEvent;
+import com.celements.search.lucene.observation.event.LuceneQueueIndexEvent;
 import com.google.common.collect.ImmutableList;
 import com.xpn.xwiki.doc.XWikiAttachment;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -48,8 +50,9 @@ public class QueueEventListenerTest extends AbstractComponentTest {
 
   @Test
   public void test_getEvents() {
-    assertEquals(1, listener.getEvents().size());
-    assertSame(LuceneQueueEvent.class, listener.getEvents().get(0).getClass());
+    assertEquals(2, listener.getEvents().size());
+    assertSame(LuceneQueueIndexEvent.class, listener.getEvents().get(0).getClass());
+    assertSame(LuceneQueueDeleteEvent.class, listener.getEvents().get(1).getClass());
   }
 
   @Test
@@ -59,12 +62,12 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     expectIndexData(listener.docDataMock, LuceneQueueEvent.Data.DEFAULT);
 
     replayDefault();
-    listener.onEvent(new LuceneQueueEvent(), doc.getDocumentReference(), null);
+    listener.onEvent(new LuceneQueueIndexEvent(), doc.getDocumentReference(), null);
     verifyDefault();
 
-    assertEquals(1, listener.docDatas.size());
-    assertEquals(doc, listener.docDatas.get(0));
-    assertEquals(0, listener.attDatas.size());
+    assertEquals(1, listener.allCapturedSize());
+    assertEquals(1, listener.docsIndex.size());
+    assertEquals(doc, listener.docsIndex.get(0));
   }
 
   @Test
@@ -75,12 +78,12 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     expectIndexData(listener.docDataMock, data);
 
     replayDefault();
-    listener.onEvent(new LuceneQueueEvent(), doc.getDocumentReference(), data);
+    listener.onEvent(new LuceneQueueIndexEvent(), doc.getDocumentReference(), data);
     verifyDefault();
 
-    assertEquals(1, listener.docDatas.size());
-    assertEquals(doc, listener.docDatas.get(0));
-    assertEquals(0, listener.attDatas.size());
+    assertEquals(1, listener.allCapturedSize());
+    assertEquals(1, listener.docsIndex.size());
+    assertEquals(doc, listener.docsIndex.get(0));
   }
 
   @Test
@@ -93,13 +96,34 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     expectIndexData(listener.attDataMock, LuceneQueueEvent.Data.DEFAULT);
 
     replayDefault();
-    listener.onEvent(new LuceneQueueEvent(), doc.getDocumentReference(), null);
+    listener.onEvent(new LuceneQueueIndexEvent(), doc.getDocumentReference(), null);
     verifyDefault();
 
-    assertEquals(1, listener.docDatas.size());
-    assertEquals(doc, listener.docDatas.get(0));
-    assertEquals(1, listener.attDatas.size());
-    assertEquals(att, listener.attDatas.get(0));
+    assertEquals(2, listener.allCapturedSize());
+    assertEquals(1, listener.docsIndex.size());
+    assertEquals(doc, listener.docsIndex.get(0));
+    assertEquals(1, listener.attsIndex.size());
+    assertEquals(att, listener.attsIndex.get(0));
+  }
+
+  @Test
+  public void test_onEvent_docRef_delete() throws Exception {
+    expect(getMock(IModelAccessFacade.class).getDocument(doc.getDocumentReference()))
+        .andReturn(doc);
+    expectIndexData(listener.docDataMock, LuceneQueueEvent.Data.DEFAULT);
+    XWikiAttachment att = new XWikiAttachment(doc, "file");
+    doc.setAttachmentList(ImmutableList.of(att));
+    expectIndexData(listener.attDataMock, LuceneQueueEvent.Data.DEFAULT);
+
+    replayDefault();
+    listener.onEvent(new LuceneQueueDeleteEvent(), doc.getDocumentReference(), null);
+    verifyDefault();
+
+    assertEquals(2, listener.allCapturedSize());
+    assertEquals(1, listener.docsDelete.size());
+    assertEquals(doc, listener.docsDelete.get(0));
+    assertEquals(1, listener.attsDelete.size());
+    assertEquals(att, listener.attsDelete.get(0));
   }
 
   @Test
@@ -113,12 +137,12 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     expectIndexData(listener.attDataMock, data);
 
     replayDefault();
-    listener.onEvent(new LuceneQueueEvent(), attRef, data);
+    listener.onEvent(new LuceneQueueIndexEvent(), attRef, data);
     verifyDefault();
 
-    assertEquals(0, listener.docDatas.size());
-    assertEquals(1, listener.attDatas.size());
-    assertEquals(att, listener.attDatas.get(0));
+    assertEquals(1, listener.allCapturedSize());
+    assertEquals(1, listener.attsIndex.size());
+    assertEquals(att, listener.attsIndex.get(0));
   }
 
   @Test
@@ -131,12 +155,58 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     expectIndexData(listener.attDataMock, LuceneQueueEvent.Data.DEFAULT);
 
     replayDefault();
-    listener.onEvent(new LuceneQueueEvent(), attRef, null);
+    listener.onEvent(new LuceneQueueIndexEvent(), attRef, null);
     verifyDefault();
 
-    assertEquals(0, listener.docDatas.size());
-    assertEquals(1, listener.attDatas.size());
-    assertEquals(att, listener.attDatas.get(0));
+    assertEquals(1, listener.allCapturedSize());
+    assertEquals(1, listener.attsIndex.size());
+    assertEquals(att, listener.attsIndex.get(0));
+  }
+
+  @Test
+  public void test_onEvent_attRef_delete() throws Exception {
+    expect(getMock(IModelAccessFacade.class).getDocument(doc.getDocumentReference()))
+        .andReturn(doc);
+    AttachmentReference attRef = new AttachmentReference("file", doc.getDocumentReference());
+    XWikiAttachment att = new XWikiAttachment(doc, attRef.getName());
+    doc.setAttachmentList(ImmutableList.of(att));
+    expectIndexData(listener.attDataMock, LuceneQueueEvent.Data.DEFAULT);
+
+    replayDefault();
+    listener.onEvent(new LuceneQueueDeleteEvent(), attRef, null);
+    verifyDefault();
+
+    assertEquals(1, listener.allCapturedSize());
+    assertEquals(1, listener.attsDelete.size());
+    assertEquals(att, listener.attsDelete.get(0));
+  }
+
+  @Test
+  public void test_onEvent_wikiRef() throws Exception {
+    WikiReference wikiRef = doc.getDocumentReference().getWikiReference();
+    expectIndexData(listener.wikiDataMock, LuceneQueueEvent.Data.DEFAULT);
+
+    replayDefault();
+    listener.onEvent(new LuceneQueueIndexEvent(), wikiRef, null);
+    verifyDefault();
+
+    assertEquals(1, listener.allCapturedSize());
+    assertEquals(1, listener.wikisIndex.size());
+    assertEquals(wikiRef, listener.wikisIndex.get(0));
+  }
+
+  @Test
+  public void test_onEvent_wikiRef_delete() throws Exception {
+    WikiReference wikiRef = doc.getDocumentReference().getWikiReference();
+    expectIndexData(listener.wikiDataMock, LuceneQueueEvent.Data.DEFAULT);
+
+    replayDefault();
+    listener.onEvent(new LuceneQueueDeleteEvent(), wikiRef, null);
+    verifyDefault();
+
+    assertEquals(1, listener.allCapturedSize());
+    assertEquals(1, listener.wikisDelete.size());
+    assertEquals(wikiRef, listener.wikisDelete.get(0));
   }
 
   private void expectIndexData(AbstractIndexData indexData, LuceneQueueEvent.Data data) {
@@ -151,7 +221,7 @@ public class QueueEventListenerTest extends AbstractComponentTest {
     SpaceReference ref = new SpaceReference("space", new WikiReference("wiki"));
 
     replayDefault();
-    listener.onEvent(new LuceneQueueEvent(), ref, null);
+    listener.onEvent(new LuceneQueueIndexEvent(), ref, null);
     verifyDefault();
   }
 
@@ -161,7 +231,7 @@ public class QueueEventListenerTest extends AbstractComponentTest {
         .andThrow(new DocumentNotExistsException(doc.getDocumentReference()));
 
     replayDefault();
-    listener.onEvent(new LuceneQueueEvent(), doc.getDocumentReference(), null);
+    listener.onEvent(new LuceneQueueIndexEvent(), doc.getDocumentReference(), null);
     verifyDefault();
   }
 

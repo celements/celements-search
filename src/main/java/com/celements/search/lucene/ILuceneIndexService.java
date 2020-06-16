@@ -37,10 +37,15 @@ public interface ILuceneIndexService {
 
   void queue(@NotNull EntityReference ref, @Nullable IndexQueuePriority priority);
 
-  void queueWithoutNotifications(@NotNull EntityReference ref);
+  void queue(@NotNull EntityReference ref, @Nullable IndexQueuePriority priority,
+      @Nullable Boolean disableEventNotification);
 
-  void queueWithoutNotifications(@NotNull EntityReference ref,
-      @Nullable IndexQueuePriority priority);
+  void queueDelete(@NotNull EntityReference ref);
+
+  void queueDelete(@NotNull EntityReference ref, @Nullable IndexQueuePriority priority);
+
+  void queueDelete(@NotNull EntityReference ref, @Nullable IndexQueuePriority priority,
+      @Nullable Boolean disableEventNotification);
 
   long getQueueSize();
 
