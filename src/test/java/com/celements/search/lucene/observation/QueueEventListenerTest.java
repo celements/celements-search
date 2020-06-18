@@ -205,7 +205,7 @@ public class QueueEventListenerTest extends AbstractComponentTest {
   private void expectIndexData(AbstractIndexData indexData, LuceneQueueEvent.Data data) {
     getMock(LucenePlugin.class).queue(same(indexData));
     expect(indexData.setPriority(data.priority)).andReturn(indexData);
-    expect(indexData.disableObservationEventNotification(data.disableEventNotification))
+    expect(indexData.setDisableObservationEventNotification(data.disableEventNotification))
         .andReturn(indexData);
   }
 

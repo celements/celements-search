@@ -76,12 +76,12 @@ public class QueueEventListener
   private void queue(AbstractIndexData indexData, LuceneQueueEvent.Data eventData) {
     if (indexData != null) {
       indexData.setPriority(eventData.priority);
-      indexData.disableObservationEventNotification(eventData.disableEventNotification);
-      LOGGER.info("queue: {}", indexData);
+      indexData.setDisableObservationEventNotification(eventData.disableEventNotification);
       if (isLucenePluginAvailable()) {
+        LOGGER.debug("queue: {}", indexData);
         getLucenePlugin().queue(indexData);
       } else {
-        LOGGER.warn("LucenePlugin not available, first request?");
+        LOGGER.warn("LucenePlugin not available, first request? [{}]", indexData);
       }
     }
   }
