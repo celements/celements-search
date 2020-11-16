@@ -1,6 +1,6 @@
 package com.celements.search.lucene.observation;
 
-import static org.glassfish.jersey.internal.guava.Predicates.*;
+import static com.google.common.base.Predicates.*;
 
 import java.util.Optional;
 

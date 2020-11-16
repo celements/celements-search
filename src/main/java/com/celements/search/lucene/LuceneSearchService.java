@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -243,11 +242,13 @@ public class LuceneSearchService implements ILuceneSearchService {
   }
 
   private <T> String serializeClassFieldValue(ClassField<T> field, T value) {
-    Object ret = value;
+    Optional<?> ret;
     if (field instanceof CustomClassField) {
       ret = ((CustomClassField<T>) field).serialize(value);
+    } else {
+      ret = Optional.ofNullable(value);
     }
-    return Objects.toString(ret);
+    return ret.map(Object::toString).orElse("");
   }
 
   @Override
