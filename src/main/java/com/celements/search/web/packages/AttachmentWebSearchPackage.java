@@ -4,22 +4,21 @@ import static com.celements.search.lucene.LuceneUtils.*;
 import static com.celements.search.web.classes.WebAttachmentSearchConfigClass.*;
 
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.model.reference.ClassReference;
 
-import com.celements.model.access.IModelAccessFacade;
-import com.celements.model.classes.ClassDefinition;
 import com.celements.model.classes.fields.ClassField;
+import com.celements.model.object.xwiki.XWikiObjectFetcher;
 import com.celements.search.lucene.ILuceneSearchService;
 import com.celements.search.lucene.query.IQueryRestriction;
 import com.celements.search.lucene.query.LuceneDocType;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.celements.search.web.classes.WebAttachmentSearchConfigClass;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.net.MediaType;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.IndexFields;
@@ -31,12 +30,6 @@ public class AttachmentWebSearchPackage implements WebSearchPackage {
 
   @Requirement
   private ILuceneSearchService searchService;
-
-  @Requirement(WebAttachmentSearchConfigClass.CLASS_DEF_HINT)
-  private ClassDefinition webAttSearchConfigClass;
-
-  @Requirement
-  private IModelAccessFacade modelAccess;
 
   @Requirement(ContentWebSearchPackage.NAME)
   private WebSearchPackage contentModule;
@@ -75,41 +68,33 @@ public class AttachmentWebSearchPackage implements WebSearchPackage {
 
   private IQueryRestriction getRestrMimeTypes(XWikiDocument cfgDoc, boolean isBlacklist) {
     ClassField<List<MediaType>> field = isBlacklist ? FIELD_MIMETYPES_BLACK_LIST : FIELD_MIMETYPES;
-    return buildRestrictionFromField(cfgDoc, field, new Function<MediaType, IQueryRestriction>() {
-
-      @Override
-      public IQueryRestriction apply(MediaType mediaType) {
-        return searchService.createRestriction(IndexFields.MIMETYPE, exactify(
-            mediaType.toString()));
-      }
-    }).setNegate(isBlacklist);
+    return buildRestrictionFromField(cfgDoc, field,
+        mediaType -> searchService.createRestriction(IndexFields.MIMETYPE,
+            exactify(mediaType.toString()))).setNegate(isBlacklist);
   }
 
   private IQueryRestriction getRestrFilenamePrefixes(XWikiDocument cfgDoc) {
     return buildRestrictionFromField(cfgDoc, FIELD_FILENAME_PREFIXES,
-        new Function<String, IQueryRestriction>() {
-
-          @Override
-          public IQueryRestriction apply(String str) {
-            return searchService.createRestriction(IndexFields.FILENAME, str);
-          }
-        });
+        str -> searchService.createRestriction(IndexFields.FILENAME, str));
   }
 
   private <T> IQueryRestriction buildRestrictionFromField(XWikiDocument cfgDoc,
       ClassField<List<T>> field, Function<T, IQueryRestriction> restrictionFunc) {
-    return buildRestrictionGroup(Type.OR, modelAccess.getFieldValue(cfgDoc, field).orNull(),
-        restrictionFunc);
+    List<T> values = XWikiObjectFetcher.on(cfgDoc).fetchField(field)
+        .stream().flatMap(List::stream)
+        .collect(Collectors.toList());
+    return buildRestrictionGroup(Type.OR, values, restrictionFunc);
   }
 
   @Override
-  public Optional<ClassReference> getLinkedClassRef() {
-    return Optional.absent();
+  public com.google.common.base.Optional<ClassReference> getLinkedClassRef() {
+    return com.google.common.base.Optional.absent();
   }
 
   private boolean hasConfigObj(XWikiDocument cfgDoc) {
-    return modelAccess.getXObject(cfgDoc,
-        webAttSearchConfigClass.getClassReference().getDocRef()) != null;
+    return (cfgDoc != null) && XWikiObjectFetcher.on(cfgDoc)
+        .filter(WebAttachmentSearchConfigClass.CLASS_REF)
+        .exists();
   }
 
 }

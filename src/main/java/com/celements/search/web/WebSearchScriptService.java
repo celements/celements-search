@@ -2,6 +2,7 @@ package com.celements.search.web;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,11 +12,13 @@ import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.script.service.ScriptService;
 
+import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.rights.access.EAccessLevel;
 import com.celements.rights.access.IRightsAccessFacadeRole;
 import com.celements.search.lucene.LuceneSearchResult;
 import com.celements.search.web.packages.WebSearchPackage;
+import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.web.Utils;
 
 @Component(WebSearchScriptService.NAME)
@@ -31,11 +34,14 @@ public class WebSearchScriptService implements ScriptService {
   @Requirement
   private IRightsAccessFacadeRole rightsAccess;
 
+  @Requirement
+  private IModelAccessFacade modelAccess;
+
   public WebSearchQueryBuilder createWebSearchBuilder(DocumentReference configDocRef) {
     WebSearchQueryBuilder ret = null;
     try {
       if ((configDocRef != null) && rightsAccess.hasAccessLevel(configDocRef, EAccessLevel.VIEW)) {
-        ret = searchService.createWebSearchBuilder(configDocRef);
+        ret = searchService.createWebSearchBuilder(modelAccess.getDocument(configDocRef));
       }
     } catch (DocumentNotExistsException exc) {
       LOGGER.info("createWebSearchBuilder: provided configDoc '{}' doesn't exist", configDocRef);
@@ -69,9 +75,11 @@ public class WebSearchScriptService implements ScriptService {
           }
         }
       }
+      languages = (languages != null) ? languages : new ArrayList<>();
+      sortFields = (sortFields != null) ? sortFields : new ArrayList<>();
       try {
-        ret = searchService.webSearch(searchTerm, configDocRef, activatedPackages, languages,
-            sortFields);
+        ret = searchService.webSearch(searchTerm, modelAccess.getDocument(configDocRef),
+            activatedPackages, languages, sortFields);
       } catch (DocumentNotExistsException exc) {
         LOGGER.info("webSearch: provided configDoc '{}' doesn't exist", configDocRef);
       }
@@ -81,11 +89,11 @@ public class WebSearchScriptService implements ScriptService {
   }
 
   public List<String> getAvailablePackages(DocumentReference configDocRef) {
-    List<String> ret = new ArrayList<>();
-    for (WebSearchPackage webSearchPackage : searchService.getAvailablePackages(configDocRef)) {
-      ret.add(webSearchPackage.getName());
-    }
-    return ret;
+    XWikiDocument configDoc = (configDocRef == null) ? null
+        : modelAccess.getOrCreateDocument(configDocRef);
+    return searchService.getAvailablePackages(configDoc).stream()
+        .map(WebSearchPackage::getName)
+        .collect(Collectors.toList());
   }
 
 }

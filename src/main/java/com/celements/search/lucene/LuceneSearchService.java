@@ -2,6 +2,8 @@ package com.celements.search.lucene;
 
 import static com.celements.model.util.ReferenceSerializationMode.*;
 import static com.celements.search.lucene.LuceneUtils.*;
+import static com.google.common.base.MoreObjects.*;
+import static java.util.stream.Collectors.*;
 
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
@@ -43,9 +45,7 @@ import com.celements.search.lucene.query.QueryRestriction;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.celements.search.lucene.query.QueryRestrictionString;
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.IndexFields;
@@ -323,22 +323,22 @@ public class LuceneSearchService implements ILuceneSearchService {
   @Override
   public QueryRestriction createFromToNumberRestriction(String field, Number fromNumber,
       Number toNumber, boolean inclusive) {
-    String from = IndexFields.numberToString(MoreObjects.firstNonNull(fromNumber, new Integer(0)));
-    String to = IndexFields.numberToString(MoreObjects.firstNonNull(toNumber, Integer.MAX_VALUE));
+    String from = IndexFields.numberToString(firstNonNull(fromNumber, Integer.valueOf(0)));
+    String to = IndexFields.numberToString(firstNonNull(toNumber, Integer.MAX_VALUE));
     return createRangeRestriction(field, from, to, inclusive);
   }
 
   @Override
   public QueryRestrictionGroup createAttachmentRestrictionGroup(List<String> mimeTypes,
       List<String> mimeTypesBlackList, List<String> filenamePrefs) {
-    mimeTypes = MoreObjects.firstNonNull(mimeTypes, ImmutableList.<String>of());
-    mimeTypesBlackList = MoreObjects.firstNonNull(mimeTypesBlackList, ImmutableList.<String>of());
-    filenamePrefs = MoreObjects.firstNonNull(filenamePrefs, ImmutableList.<String>of());
+    mimeTypes = firstNonNull(mimeTypes, ImmutableList.<String>of());
+    mimeTypesBlackList = firstNonNull(mimeTypesBlackList, ImmutableList.<String>of());
+    filenamePrefs = firstNonNull(filenamePrefs, ImmutableList.<String>of());
     QueryRestrictionGroup attGrp = createRestrictionGroup(Type.AND);
-    attGrp.add(createRestrictionGroup(Type.OR, Arrays.asList(IndexFields.MIMETYPE), Lists.transform(
-        mimeTypes, FUNC_EXACTIFY)));
-    attGrp.add(createRestrictionGroup(Type.OR, Arrays.asList(IndexFields.MIMETYPE), Lists.transform(
-        mimeTypesBlackList, FUNC_EXACTIFY)).setNegate(true));
+    attGrp.add(createRestrictionGroup(Type.OR, Arrays.asList(IndexFields.MIMETYPE),
+        mimeTypes.stream().map(LuceneUtils::exactify).collect(toList())));
+    attGrp.add(createRestrictionGroup(Type.OR, Arrays.asList(IndexFields.MIMETYPE),
+        mimeTypesBlackList.stream().map(LuceneUtils::exactify).collect(toList())).setNegate(true));
     attGrp.add(createRestrictionGroup(Type.OR, Arrays.asList(IndexFields.FILENAME), filenamePrefs));
     return attGrp;
   }

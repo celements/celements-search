@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -31,6 +33,7 @@ import com.celements.model.classes.ClassDefinition;
 import com.celements.model.classes.fields.ClassField;
 import com.celements.model.classes.fields.list.ListField;
 import com.celements.model.context.ModelContext;
+import com.celements.model.object.xwiki.XWikiObjectFetcher;
 import com.celements.model.util.ModelUtils;
 import com.celements.pagetype.IPageTypeClassConfig;
 import com.celements.pagetype.PageTypeReference;
@@ -43,8 +46,6 @@ import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.celements.search.web.classes.WebSearchConfigClass;
 import com.celements.search.web.packages.WebSearchPackage;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
@@ -124,8 +125,12 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
       return modelAccess.getDocument(new DocumentReference("XWikiPreferences", new SpaceReference(
           "XWiki", context.getWikiRef())));
     } catch (DocumentNotExistsException exc) {
-      throw new RuntimeException("XWiki.XWikiPreferences should always exist", exc);
+      throw new IllegalStateException("XWiki.XWikiPreferences should always exist", exc);
     }
+  }
+
+  private <T> Optional<T> fetch(ClassField<T> field) {
+    return XWikiObjectFetcher.on(getConfigDoc()).fetchField(field).stream().findFirst();
   }
 
   @Override
@@ -148,8 +153,7 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
 
   @Override
   public Collection<WebSearchPackage> getPackages() {
-    Set<WebSearchPackage> ret = webSearchService.getAvailablePackages(
-        getConfigDoc().getDocumentReference());
+    Set<WebSearchPackage> ret = webSearchService.getAvailablePackages(getConfigDoc());
     if (!activatedPackages.isEmpty()) {
       ret = Sets.intersection(ret, activatedPackages);
     }
@@ -198,37 +202,23 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
 
   private IQueryRestriction getRestrSpaces(boolean isBlacklist) {
     ClassField<List<SpaceReference>> field = isBlacklist ? FIELD_SPACES_BLACK_LIST : FIELD_SPACES;
-    return buildRestrictionFromField(field, new Function<SpaceReference, IQueryRestriction>() {
-
-      @Override
-      public IQueryRestriction apply(SpaceReference spaceRef) {
-        return searchService.createSpaceRestriction(spaceRef);
-      }
-    }).setNegate(isBlacklist);
+    return buildRestrictionFromField(field,
+        spaceRef -> searchService.createSpaceRestriction(spaceRef)).setNegate(isBlacklist);
   }
 
   private IQueryRestriction getRestrDocs(boolean isBlacklist) {
     ClassField<List<DocumentReference>> field = isBlacklist ? FIELD_DOCS_BLACK_LIST : FIELD_DOCS;
-    return buildRestrictionFromField(field, new Function<DocumentReference, IQueryRestriction>() {
-
-      @Override
-      public IQueryRestriction apply(DocumentReference docRef) {
-        return searchService.createDocRestriction(docRef);
-      }
-    }).setNegate(isBlacklist);
+    return buildRestrictionFromField(field, docRef -> searchService.createDocRestriction(docRef))
+        .setNegate(isBlacklist);
   }
 
   private IQueryRestriction getRestrPageTypes(boolean isBlacklist) {
     ClassField<List<PageTypeReference>> field = isBlacklist ? FIELD_PAGETYPES_BLACK_LIST
         : FIELD_PAGETYPES;
-    return buildRestrictionFromField(field, new Function<PageTypeReference, IQueryRestriction>() {
-
-      @Override
-      public IQueryRestriction apply(PageTypeReference pageTypeRef) {
-        return searchService.createFieldRestriction(ptClassConf.getPageTypeClassRef(),
-            IPageTypeClassConfig.PAGE_TYPE_FIELD, exactify(pageTypeRef.getConfigName()));
-      }
-    }).setNegate(isBlacklist);
+    return buildRestrictionFromField(field,
+        pageTypeRef -> searchService.createFieldRestriction(ptClassConf.getPageTypeClassRef(),
+            IPageTypeClassConfig.PAGE_TYPE_FIELD, exactify(pageTypeRef.getConfigName())))
+                .setNegate(isBlacklist);
   }
 
   private <T> IQueryRestriction buildRestrictionFromField(ClassField<List<T>> field,
@@ -237,7 +227,7 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
     if (field instanceof ListField) {
       values.addAll(getDefaultValues((ListField<T>) field));
     }
-    values.addAll(modelAccess.getFieldValue(getConfigDoc(), field).or(ImmutableList.<T>of()));
+    fetch(field).ifPresent(values::addAll);
     return buildRestrictionGroup(Type.OR, values, restrictionFunc);
   }
 
@@ -256,16 +246,13 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
       searchPackageGrp.add(searchPackage.getQueryRestriction(getConfigDoc(), getSearchTerm()));
       grp.add(searchPackageGrp);
     }
-    Optional<Float> fuzzy = modelAccess.getFieldValue(getConfigDoc(), FIELD_FUZZY_SEARCH);
-    if (fuzzy.isPresent()) {
-      grp.setFuzzy(fuzzy.get());
-    }
+    fetch(FIELD_FUZZY_SEARCH).ifPresent(grp::setFuzzy);
     return grp;
   }
 
   private IQueryRestriction getRestrLinkedDocsOnly(Collection<WebSearchPackage> searchPackages) {
     QueryRestrictionGroup grp = searchService.createRestrictionGroup(Type.OR);
-    if (modelAccess.getFieldValue(getConfigDoc(), FIELD_LINKED_DOCS_ONLY).or(false)) {
+    if (fetch(FIELD_LINKED_DOCS_ONLY).orElse(false)) {
       for (WebSearchPackage searchPackage : searchPackages) {
         grp.add(getLinkedDocsOnlyPackageRestr(searchPackage));
       }
