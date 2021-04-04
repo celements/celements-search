@@ -1,5 +1,8 @@
 package com.celements.search.web.packages;
 
+import static com.celements.search.lucene.LuceneUtils.*;
+import static com.xpn.xwiki.plugin.lucene.IndexFields.*;
+
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.configuration.ConfigurationSource;
@@ -8,9 +11,11 @@ import org.xwiki.model.reference.ClassReference;
 import com.celements.search.lucene.ILuceneSearchService;
 import com.celements.search.lucene.query.IQueryRestriction;
 import com.celements.search.lucene.query.LuceneDocType;
+import com.celements.search.lucene.query.QueryRestrictionGroup;
+import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.plugin.lucene.IndexFields;
 
 @Component(ContentWebSearchPackage.NAME)
 public class ContentWebSearchPackage implements WebSearchPackage {
@@ -48,7 +53,14 @@ public class ContentWebSearchPackage implements WebSearchPackage {
   @Override
   public IQueryRestriction getQueryRestriction(XWikiDocument cfgDoc, String searchTerm) {
     float boost = cfgSrc.getProperty(CFGSRC_PROP_BOOST, 20f);
-    return searchService.createRestriction(IndexFields.FULLTEXT, searchTerm).setBoost(boost);
+    QueryRestrictionGroup grp = searchService.createRestrictionGroup(Type.OR);
+    if (!Strings.nullToEmpty(searchTerm).trim().isEmpty()) {
+      grp.add(searchService.createRestriction(FULLTEXT, searchTerm, true)
+          .setBoost(boost));
+      grp.add(searchService.createRestriction(FULLTEXT, exactify(searchTerm), false)
+          .setBoost(boost * 2));
+    }
+    return grp;
   }
 
   @Override

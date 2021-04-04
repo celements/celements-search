@@ -29,10 +29,12 @@ import com.xpn.xwiki.web.Utils;
 public class WebSearchQueryBuilderTest extends AbstractComponentTest {
 
   private static final String QUERY_START = "wiki:(+\"wiki\") AND NOT name:(+\"WebPreferences\") AND ";
-  private static final String QUERY_CONTENT = "(type:(+\"wikipage\") AND ft:(+{0}*)^20)";
+  private static final String QUERY_CONTENT = "(type:(+\"wikipage\") AND "
+      + "(ft:(+{0}*)^20 OR ft:(\"{0}\")^40))";
   private static final String QUERY_MENU = "(type:(+\"wikipage\") AND "
       + "(Celements2.MenuName.menu_name:(+{0}*)^30 OR title:(+{0}*)^30))";
-  private static final String QUERY_ATTACHMENT = "(type:(+\"attachment\") AND ft:(+{0}*)^20)";
+  private static final String QUERY_ATTACHMENT = "(type:(+\"attachment\") AND "
+      + "(ft:(+{0}*)^20 OR ft:(\"{0}\")^40))";
 
   private DocumentReference docRef;
   private WebSearchQueryBuilder builder;
