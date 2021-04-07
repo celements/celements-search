@@ -16,24 +16,34 @@ import com.xpn.xwiki.doc.XWikiDocument;
 @ComponentRole
 public interface WebSearchQueryBuilder {
 
-  public @NotNull WikiReference getWikiRef();
+  @NotNull
+  WikiReference getWikiRef();
 
-  public @NotNull WebSearchQueryBuilder setWikiRef(@Nullable WikiReference wikiRef);
+  @NotNull
+  WebSearchQueryBuilder setWikiRef(@Nullable WikiReference wikiRef);
 
-  public @NotNull DocumentReference getConfigDocRef();
+  @NotNull
+  DocumentReference getConfigDocRef();
 
-  public @NotNull WebSearchQueryBuilder setConfigDoc(@Nullable XWikiDocument doc);
+  @NotNull
+  WebSearchQueryBuilder setConfigDoc(@Nullable XWikiDocument doc);
 
-  public @NotNull String getSearchTerm();
+  @NotNull
+  String getSearchTerm();
 
-  public @NotNull WebSearchQueryBuilder setSearchTerm(@NotNull String searchTerm);
+  @NotNull
+  WebSearchQueryBuilder setSearchTerm(@NotNull String searchTerm);
 
-  public @NotNull Collection<WebSearchPackage> getPackages();
+  @NotNull
+  Collection<WebSearchPackage> getPackages();
 
-  public @NotNull WebSearchQueryBuilder addPackage(@NotNull WebSearchPackage searchPackage);
+  @NotNull
+  WebSearchQueryBuilder addPackage(@NotNull WebSearchPackage searchPackage);
 
-  public @NotNull WebSearchQueryBuilder addPackage(@NotNull String packageName);
+  @NotNull
+  WebSearchQueryBuilder addPackage(@NotNull String packageName);
 
-  public @NotNull LuceneQuery build();
+  @NotNull
+  LuceneQuery build();
 
 }

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,12 @@ public final class LuceneUtils {
 
   private static final String QUOTE = "\"";
   private static final Splitter SPLITTER = Splitter.on("[,;\\| ]+");
+
+  /**
+   * @deprecated since 4.10 instead simply use lambda method reference
+   */
+  @Deprecated
+  public static final UnaryOperator<String> FUNC_EXACTIFY = LuceneUtils::exactify;
 
   public static String exactify(String str) {
     str = Strings.nullToEmpty(str);

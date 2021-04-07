@@ -10,8 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
+import org.xwiki.model.reference.DocumentReference;
 
 import com.celements.model.access.IModelAccessFacade;
+import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.context.ModelContext;
 import com.celements.model.object.xwiki.XWikiObjectFetcher;
 import com.celements.search.lucene.ILuceneSearchService;
@@ -39,6 +41,12 @@ public class WebSearchService implements IWebSearchService {
 
   @Requirement
   private ModelContext context;
+
+  @Deprecated
+  @Override
+  public Set<WebSearchPackage> getAvailablePackages(DocumentReference configDocRef) {
+    return getAvailablePackages(modelAccess.getOrCreateDocument(configDocRef));
+  }
 
   @Override
   public Set<WebSearchPackage> getAvailablePackages(XWikiDocument configDoc) {
@@ -68,6 +76,13 @@ public class WebSearchService implements IWebSearchService {
     return webSearchPackages.stream().filter(pack -> pack.isRequired(configDoc));
   }
 
+  @Deprecated
+  @Override
+  public WebSearchQueryBuilder createWebSearchBuilder(DocumentReference configDocRef)
+      throws DocumentNotExistsException {
+    return createWebSearchBuilder(modelAccess.getDocument(configDocRef));
+  }
+
   @Override
   public WebSearchQueryBuilder createWebSearchBuilder(XWikiDocument configDoc) {
     WebSearchQueryBuilder ret = null;
@@ -80,6 +95,15 @@ public class WebSearchService implements IWebSearchService {
   public LuceneSearchResult webSearch(String searchTerm, XWikiDocument configDoc) {
     return webSearch(searchTerm, configDoc, ImmutableList.of(), ImmutableList.of(),
         ImmutableList.of());
+  }
+
+  @Deprecated
+  @Override
+  public LuceneSearchResult webSearch(String searchTerm, DocumentReference configDocRef,
+      List<WebSearchPackage> activatedPackages, List<String> languages, List<String> sortFields)
+      throws DocumentNotExistsException {
+    return webSearch(searchTerm, modelAccess.getOrCreateDocument(configDocRef), activatedPackages,
+        languages, sortFields);
   }
 
   @Override
