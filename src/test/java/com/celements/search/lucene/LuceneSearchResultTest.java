@@ -249,7 +249,7 @@ public class LuceneSearchResultTest extends AbstractBridgedComponentTestCase {
     List<String> languages = Arrays.asList("lang1", "lang2");
     boolean skipChecks = false;
     newResult(query, sortFields, languages, skipChecks);
-    Capture<String[]> sortFieldsCapture = new Capture<>();
+    Capture<String[]> sortFieldsCapture = newCapture();
     SearchResults sResultsMock = createMockAndAddToDefault(SearchResults.class);
 
     expect(lucenePluginMock.getSearchResults(eq(query.getQueryString()), capture(sortFieldsCapture),
@@ -268,7 +268,7 @@ public class LuceneSearchResultTest extends AbstractBridgedComponentTestCase {
     LuceneQuery query = new LuceneQuery(Arrays.asList("wikipage"));
     boolean skipChecks = true;
     newResult(query, null, null, skipChecks);
-    Capture<String[]> sortFieldsCapture = new Capture<>();
+    Capture<String[]> sortFieldsCapture = newCapture();
     SearchResults sResultsMock = createMockAndAddToDefault(SearchResults.class);
 
     expect(lucenePluginMock.getSearchResultsWithoutChecks(eq(query.getQueryString()), capture(
