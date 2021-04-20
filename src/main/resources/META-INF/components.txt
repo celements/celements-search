@@ -5,10 +5,12 @@ com.celements.search.web.classes.WebSearchClasses
 com.celements.search.lucene.LuceneIndexService
 com.celements.search.web.classes.WebSearchClassPackage
 com.celements.search.web.classes.WebSearchConfigClass
+com.celements.search.web.classes.WebSearchFieldConfigClass
 com.celements.search.web.classes.WebAttachmentSearchConfigClass
 com.celements.search.web.DefaultWebSearchQueryBuilder
 com.celements.search.web.packages.ContentWebSearchPackage
 com.celements.search.web.packages.MenuWebSearchPackage
+com.celements.search.web.packages.FieldWebSearchPackage
 com.celements.search.web.packages.AttachmentWebSearchPackage
 com.celements.search.web.WebSearchService
 com.celements.search.web.WebSearchScriptService
