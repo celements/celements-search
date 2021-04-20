@@ -17,8 +17,10 @@ import com.celements.common.test.AbstractComponentTest;
 import com.celements.model.classes.ClassDefinition;
 import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.search.web.classes.WebSearchConfigClass;
+import com.celements.search.web.classes.WebSearchFieldConfigClass;
 import com.celements.search.web.packages.AttachmentWebSearchPackage;
 import com.celements.search.web.packages.ContentWebSearchPackage;
+import com.celements.search.web.packages.FieldWebSearchPackage;
 import com.celements.search.web.packages.MenuWebSearchPackage;
 import com.celements.search.web.packages.WebSearchPackage;
 import com.google.common.collect.ImmutableSet;
@@ -33,6 +35,8 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
       + "(ft:(+{0}*)^20 OR ft:(\"{0}\")^40))";
   private static final String QUERY_MENU = "(type:(+\"wikipage\") AND "
       + "(Celements2.MenuName.menu_name:(+{0}*)^30 OR title:(+{0}*)^30))";
+  private static final String QUERY_FIELD = "(type:(+\"wikipage\") AND "
+      + "(somefield:(+{0}*)^1 OR somefield:(\"{0}\")^2))";
   private static final String QUERY_ATTACHMENT = "(type:(+\"attachment\") AND "
       + "(ft:(+{0}*)^20 OR ft:(\"{0}\")^40))";
 
@@ -149,6 +153,32 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
     assertNotNull(query);
     assertEquals(1, builder.getPackages().size());
     assertEquals(buildQueryString(QUERY_MENU, searchTerm), query.getQueryString());
+  }
+
+  @Test
+  public void test_build_field() throws Exception {
+    String searchTerm = "welt";
+    XWikiDocument cfgDoc = createCfgDoc(docRef, false);
+    BaseObject obj = new BaseObject();
+    obj.setXClassReference(WebSearchFieldConfigClass.CLASS_REF);
+    obj.setStringValue(WebSearchFieldConfigClass.FIELD_NAME.getName(), "somefield");
+    cfgDoc.addXObject(obj);
+    builder.setConfigDoc(cfgDoc);
+    builder.setSearchTerm(searchTerm);
+    builder.addPackage(FieldWebSearchPackage.NAME);
+
+    expect(webSearchServiceMock.getAvailablePackages(cfgDoc)).andReturn(
+        ImmutableSet.<WebSearchPackage>of(Utils.getComponent(WebSearchPackage.class,
+            FieldWebSearchPackage.NAME)))
+        .atLeastOnce();
+
+    replayDefault();
+    LuceneQuery query = builder.build();
+    verifyDefault();
+
+    assertNotNull(query);
+    assertEquals(1, builder.getPackages().size());
+    assertEquals(buildQueryString(QUERY_FIELD, searchTerm), query.getQueryString());
   }
 
   @Test
