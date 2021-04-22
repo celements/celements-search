@@ -4,6 +4,9 @@ import static com.celements.search.lucene.LuceneUtils.*;
 
 import java.util.stream.Stream;
 
+import javax.annotation.concurrent.ThreadSafe;
+import javax.inject.Singleton;
+
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.model.reference.ClassReference;
@@ -17,6 +20,8 @@ import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.celements.search.web.classes.WebSearchFieldConfigClass;
 import com.xpn.xwiki.doc.XWikiDocument;
 
+@ThreadSafe
+@Singleton
 @Component(FieldWebSearchPackage.NAME)
 public class FieldWebSearchPackage implements WebSearchPackage {
 
