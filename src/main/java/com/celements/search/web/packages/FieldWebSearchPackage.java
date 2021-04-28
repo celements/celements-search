@@ -13,9 +13,12 @@ import java.util.stream.Stream;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 import org.xwiki.model.reference.ClassReference;
+import org.xwiki.velocity.XWikiVelocityException;
 
 import com.celements.model.field.FieldAccessor;
 import com.celements.model.field.XObjectFieldAccessor;
@@ -27,6 +30,7 @@ import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.celements.search.web.classes.WebSearchFieldConfigClass;
 import com.celements.search.web.classes.WebSearchFieldConfigClass.SearchMode;
+import com.celements.velocity.VelocityService;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 
@@ -37,6 +41,8 @@ import one.util.streamex.EntryStream;
 @Component(FieldWebSearchPackage.NAME)
 public class FieldWebSearchPackage implements WebSearchPackage {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(FieldWebSearchPackage.class);
+
   public static final String NAME = "field";
 
   @Requirement
@@ -44,6 +50,9 @@ public class FieldWebSearchPackage implements WebSearchPackage {
 
   @Requirement(XObjectFieldAccessor.NAME)
   private FieldAccessor<BaseObject> xFieldAccess;
+
+  @Requirement
+  private VelocityService velocityService;
 
   @Override
   public String getName() {
@@ -83,7 +92,8 @@ public class FieldWebSearchPackage implements WebSearchPackage {
 
   private IQueryRestriction asRestriction(BaseObject obj, String searchTerm) {
     String field = xFieldAccess.get(obj, FIELD_NAME).orElse("");
-    String value = xFieldAccess.get(obj, FIELD_VALUE).orElse(searchTerm);
+    String value = xFieldAccess.get(obj, FIELD_VALUE)
+        .map(this::evaluateVelocityText).orElse(searchTerm);
     float boost = xFieldAccess.get(obj, FIELD_BOOST).orElse(1f);
     return createRestrictionGroup(Type.OR, xFieldAccess.get(obj, FIELD_SEARCH_MODE)
         .orElseGet(() -> Arrays.asList(SearchMode.values()))
@@ -100,6 +110,15 @@ public class FieldWebSearchPackage implements WebSearchPackage {
         return searchService.createRestriction(field, exactify(value), false).setBoost(boost * 2);
       default:
         throw new IllegalArgumentException(Objects.toString(mode));
+    }
+  }
+
+  private String evaluateVelocityText(String text) {
+    try {
+      return velocityService.evaluateVelocityText(text);
+    } catch (XWikiVelocityException exc) {
+      LOGGER.info("evaluateVelocityText: failed", exc);
+      return text;
     }
   }
 

@@ -46,11 +46,7 @@ public class WebSearchFieldConfigClass extends AbstractClassDefinition implement
       CLASS_REF, "boost").prettyName("Boost (default: 1.0)").build();
 
   public static final ClassField<String> FIELD_VALUE = new StringField.Builder(
-      CLASS_REF, "value").prettyName("Value (optional)").build();
-
-  public enum SearchMode {
-    TOKENIZED, EXACT;
-  }
+      CLASS_REF, "value").prettyName("Value (Velocity, optional)").build();
 
   public WebSearchFieldConfigClass() {
     super(CLASS_REF);
@@ -59,6 +55,10 @@ public class WebSearchFieldConfigClass extends AbstractClassDefinition implement
   @Override
   public boolean isInternalMapping() {
     return false;
+  }
+
+  public enum SearchMode {
+    TOKENIZED, EXACT;
   }
 
 }
