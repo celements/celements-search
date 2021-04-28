@@ -33,17 +33,20 @@ public class WebSearchFieldConfigClass extends AbstractClassDefinition implement
   public static final ClassField<String> FIELD_NAME = new StringField.Builder(
       CLASS_REF, "fieldName").build();
 
-  public static final ClassField<String> FIELD_VALUE = new StringField.Builder(
-      CLASS_REF, "value").build();
-
   public static final ClassField<Type> FIELD_OPERATOR = new EnumSingleListField.Builder<>(
-      CLASS_REF, "operator", Type.class).values(reverse(Arrays.asList(Type.values()))).build();
+      CLASS_REF, "operator", Type.class).prettyName("Operator (default: OR)")
+          .values(reverse(Arrays.asList(Type.values())))
+          .build();
 
   public static final ClassField<List<SearchMode>> FIELD_SEARCH_MODE = new EnumListField.Builder<>(
-      CLASS_REF, "searchMode", SearchMode.class).multiSelect(true).build();
+      CLASS_REF, "searchMode", SearchMode.class).prettyName("Search Mode (default: all)")
+          .multiSelect(true).build();
 
   public static final ClassField<Float> FIELD_BOOST = new FloatField.Builder(
-      CLASS_REF, "boost").build();
+      CLASS_REF, "boost").prettyName("Boost (default: 1.0)").build();
+
+  public static final ClassField<String> FIELD_VALUE = new StringField.Builder(
+      CLASS_REF, "value").prettyName("Value (optional)").build();
 
   public enum SearchMode {
     TOKENIZED, EXACT;
