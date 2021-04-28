@@ -1,5 +1,8 @@
 package com.celements.search.web.classes;
 
+import static com.google.common.collect.Lists.*;
+
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.concurrent.Immutable;
@@ -34,10 +37,10 @@ public class WebSearchFieldConfigClass extends AbstractClassDefinition implement
       CLASS_REF, "value").build();
 
   public static final ClassField<Type> FIELD_OPERATOR = new EnumSingleListField.Builder<>(
-      CLASS_REF, "operator", Type.class).build();
+      CLASS_REF, "operator", Type.class).values(reverse(Arrays.asList(Type.values()))).build();
 
   public static final ClassField<List<SearchMode>> FIELD_SEARCH_MODE = new EnumListField.Builder<>(
-      CLASS_REF, "searchMode", SearchMode.class).build();
+      CLASS_REF, "searchMode", SearchMode.class).multiSelect(true).build();
 
   public static final ClassField<Float> FIELD_BOOST = new FloatField.Builder(
       CLASS_REF, "boost").build();
