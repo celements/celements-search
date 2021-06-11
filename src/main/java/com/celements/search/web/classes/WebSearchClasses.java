@@ -1,7 +1,5 @@
 package com.celements.search.web.classes;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.Requirement;
 
@@ -19,18 +17,11 @@ import com.xpn.xwiki.objects.classes.BaseClass;
 @Component("WebSearchClasses")
 public class WebSearchClasses extends AbstractClassCollection {
 
-  private static Log LOGGER = LogFactory.getFactory().getInstance(WebSearchClasses.class);
-
   @Requirement
   private IWebSearchClassConfig classConf;
 
   @Requirement
   private IWebUtilsService webUtils;
-
-  @Override
-  protected Log getLogger() {
-    return LOGGER;
-  }
 
   @Override
   public String getConfigName() {
