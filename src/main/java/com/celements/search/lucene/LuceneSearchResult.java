@@ -121,15 +121,15 @@ public class LuceneSearchResult {
       throws LuceneSearchException {
     Stream<T> streamResults = streamResults(token);
     getBenchService().bench("getResults(token) after streamResults");
-    List<T> collect = streamResults.collect(Collectors.toList());
-    getBenchService().bench("getResults(token) after collect " + collect.size());
-    return collect;
+    return streamResults.collect(Collectors.toList());
   }
 
   public <T extends EntityReference> Stream<T> streamResults(Class<T> token)
       throws LuceneSearchException {
     try {
-      return getSearchResultList().stream()
+      List<SearchResult> searchResultList = getSearchResultList();
+      getBenchService().bench("streamResults after getSearchResultList");
+      return searchResultList.stream()
           .map(result -> References.cloneRef(result.getReference(), token));
     } catch (IllegalArgumentException iae) {
       throw new LuceneSearchException("Invalid token for query results", iae);
@@ -152,6 +152,7 @@ public class LuceneSearchResult {
 
   private List<SearchResult> getSearchResultList() throws LuceneSearchException {
     SearchResults results = luceneSearch();
+    getBenchService().bench("getSearchResultList after luceneSearch");
     int offset = (getOffset() <= 0 ? 1 : getOffset() + 1);
     int limit = (getLimit() <= 0 ? getSize() : getLimit());
     return results.getResults(offset, limit);
