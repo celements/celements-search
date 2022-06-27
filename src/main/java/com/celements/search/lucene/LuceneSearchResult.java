@@ -16,6 +16,7 @@ import org.xwiki.model.reference.EntityReference;
 
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.References;
+import com.celements.performance.BenchmarkRole;
 import com.celements.search.lucene.query.LuceneQuery;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
@@ -37,6 +38,8 @@ public class LuceneSearchResult {
 
   private int offset = 0;
   private int limit = 0;
+
+  private BenchmarkRole benchService;
 
   LuceneSearchResult(LuceneQuery query, List<String> sortFields, List<String> languages,
       boolean skipChecks) {
@@ -116,7 +119,11 @@ public class LuceneSearchResult {
 
   public <T extends EntityReference> List<T> getResults(Class<T> token)
       throws LuceneSearchException {
-    return streamResults(token).collect(Collectors.toList());
+    Stream<T> streamResults = streamResults(token);
+    getBenchService().bench("getResults(token) after streamResults");
+    List<T> collect = streamResults.collect(Collectors.toList());
+    getBenchService().bench("getResults(token) after collect " + collect.size());
+    return collect;
   }
 
   public <T extends EntityReference> Stream<T> streamResults(Class<T> token)
@@ -200,6 +207,13 @@ public class LuceneSearchResult {
       lucenePlugin = (LucenePlugin) getContext().getWiki().getPlugin("lucene", getContext());
     }
     return lucenePlugin;
+  }
+
+  private BenchmarkRole getBenchService() {
+    if (benchService == null) {
+      benchService = Utils.getComponent(BenchmarkRole.class);
+    }
+    return benchService;
   }
 
   private XWikiContext getContext() {
