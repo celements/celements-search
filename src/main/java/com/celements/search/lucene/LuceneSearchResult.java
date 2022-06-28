@@ -27,8 +27,8 @@ public class LuceneSearchResult {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LuceneSearchResult.class);
 
-  private SearchResults searchResultsCache;
-  private LucenePlugin lucenePlugin;
+  SearchResults searchResultsCache;
+  LucenePlugin lucenePlugin;
 
   private final String queryString;
   private final List<String> sortFields;
@@ -88,7 +88,11 @@ public class LuceneSearchResult {
   }
 
   public LuceneSearchResult setOffset(int offset) {
-    this.offset = offset;
+    if (this.offset != offset) {
+      this.offset = offset;
+      // internal SearchResults.results.topDocs may only be called once with the same offset/limit
+      searchResultsCache = null;
+    }
     return this;
   }
 
@@ -97,7 +101,11 @@ public class LuceneSearchResult {
   }
 
   public LuceneSearchResult setLimit(int limit) {
-    this.limit = limit;
+    if (this.limit != limit) {
+      this.limit = limit;
+      // internal SearchResults.results.topDocs may only be called once with the same offset/limit
+      searchResultsCache = null;
+    }
     return this;
   }
 
@@ -123,7 +131,7 @@ public class LuceneSearchResult {
       throws LuceneSearchException {
     try {
       return getSearchResultList().stream()
-          .map(result -> References.cloneRef(result.getReference(), token));
+          .map(result -> References.asCompleteRef(result.getReference(), token));
     } catch (IllegalArgumentException iae) {
       throw new LuceneSearchException("Invalid token for query results", iae);
     }
@@ -139,7 +147,7 @@ public class LuceneSearchResult {
     for (SearchResult result : getSearchResultList()) {
       ret.put(result.getReference(), result.getScore());
     }
-    LOGGER.info("getResultsScoreMap: returning '" + ret.size() + "' results for: " + this);
+    LOGGER.info("getResultsScoreMap: returning [{}] results for: {}", ret.size(), this);
     return ret;
   }
 
@@ -157,7 +165,7 @@ public class LuceneSearchResult {
     } else {
       hitcount = luceneSearch().getHitcount();
     }
-    LOGGER.debug("getSize: returning '" + hitcount + "' for: '" + this);
+    LOGGER.debug("getSize: returning [{}] for: {}", hitcount, this);
     return hitcount;
   }
 
@@ -171,7 +179,7 @@ public class LuceneSearchResult {
           searchResultsCache = getLucenePlugin().getSearchResults(queryString, getSortFieldsArray(),
               null, getLanguageString(), getContext());
         }
-        LOGGER.trace("luceneSearch: new searchResults for: " + this);
+        LOGGER.trace("luceneSearch: new searchResults for: {}", this);
       } else {
         LOGGER.trace("luceneSearch: returning cached searchResults");
       }
@@ -204,14 +212,6 @@ public class LuceneSearchResult {
 
   private XWikiContext getContext() {
     return Utils.getComponent(ModelContext.class).getXWikiContext();
-  }
-
-  void injectLucenePlugin(LucenePlugin lucenePlugin) {
-    this.lucenePlugin = lucenePlugin;
-  }
-
-  void injectSearchResultsCache(SearchResults searchResults) {
-    this.searchResultsCache = searchResults;
   }
 
 }
