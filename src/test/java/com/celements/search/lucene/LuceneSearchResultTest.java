@@ -100,7 +100,7 @@ public class LuceneSearchResultTest extends AbstractComponentTest {
   }
 
   @Test
-  public void test_GetResults_empty() throws Exception {
+  public void test_getResults_empty() throws Exception {
     LuceneQuery query = new LuceneQuery();
     boolean skipChecks = true;
     LuceneSearchResult result = newResult(query, null, null, skipChecks);
