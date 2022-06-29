@@ -64,7 +64,7 @@ public class LuceneSearchResultTest extends AbstractComponentTest {
   }
 
   @Test
-  public void test_GetSetLimit() {
+  public void test_getSetLimit() {
     LuceneSearchResult result = newResult(new LuceneQuery(), null, null, false);
     assertEquals(0, result.getLimit());
     result.searchResultsCache = createMockAndAddToDefault(SearchResults.class);
