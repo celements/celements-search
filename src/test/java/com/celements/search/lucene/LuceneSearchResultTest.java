@@ -121,7 +121,7 @@ public class LuceneSearchResultTest extends AbstractComponentTest {
   }
 
   @Test
-  public void test_GetResults_negativeOffsetLimit() throws Exception {
+  public void test_getResults_negativeOffsetLimit() throws Exception {
     LuceneQuery query = new LuceneQuery();
     boolean skipChecks = false;
     LuceneSearchResult result = newResult(query, null, null, skipChecks);
