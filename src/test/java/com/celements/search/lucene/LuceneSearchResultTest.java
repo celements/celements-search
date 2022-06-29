@@ -54,7 +54,7 @@ public class LuceneSearchResultTest extends AbstractComponentTest {
   }
 
   @Test
-  public void test_GetSetOffset() {
+  public void test_getSetOffset() {
     LuceneSearchResult result = newResult(new LuceneQuery(), null, null, false);
     assertEquals(0, result.getOffset());
     result.searchResultsCache = createMockAndAddToDefault(SearchResults.class);
