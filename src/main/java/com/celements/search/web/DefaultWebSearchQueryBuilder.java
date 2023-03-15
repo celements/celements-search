@@ -4,11 +4,13 @@ import static com.celements.search.lucene.LuceneUtils.*;
 import static com.celements.search.web.classes.WebSearchConfigClass.*;
 import static com.google.common.base.MoreObjects.*;
 import static com.google.common.base.Preconditions.*;
+import static java.util.stream.Collectors.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -27,6 +29,7 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 
+import com.celements.configuration.ConfigSourceUtils;
 import com.celements.model.access.IModelAccessFacade;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.classes.ClassDefinition;
@@ -36,7 +39,7 @@ import com.celements.model.context.ModelContext;
 import com.celements.model.object.xwiki.XWikiObjectFetcher;
 import com.celements.model.util.ModelUtils;
 import com.celements.pagetype.IPageTypeClassConfig;
-import com.celements.pagetype.PageTypeReference;
+import com.celements.pagetype.classes.PageTypeClass;
 import com.celements.search.lucene.ILuceneSearchService;
 import com.celements.search.lucene.LuceneUtils;
 import com.celements.search.lucene.query.IQueryRestriction;
@@ -46,10 +49,7 @@ import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.celements.search.web.classes.WebSearchConfigClass;
 import com.celements.search.web.packages.WebSearchPackage;
-import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.IndexFields;
@@ -213,11 +213,9 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
   }
 
   private IQueryRestriction getRestrPageTypes(boolean isBlacklist) {
-    ClassField<List<PageTypeReference>> field = isBlacklist ? FIELD_PAGETYPES_BLACK_LIST
-        : FIELD_PAGETYPES;
-    return buildRestrictionFromField(field,
-        pageTypeRef -> searchService.createFieldRestriction(ptClassConf.getPageTypeClassRef(),
-            IPageTypeClassConfig.PAGE_TYPE_FIELD, exactify(pageTypeRef.getConfigName())))
+    return buildRestrictionFromField((isBlacklist ? FIELD_PAGETYPES_BLACK_LIST : FIELD_PAGETYPES),
+        pageTypeRef -> searchService.createRestriction(PageTypeClass.FIELD_PAGE_TYPE,
+            exactify(pageTypeRef.getConfigName())))
                 .setNegate(isBlacklist);
   }
 
@@ -232,10 +230,12 @@ public class DefaultWebSearchQueryBuilder implements WebSearchQueryBuilder {
   }
 
   private <T> List<T> getDefaultValues(ListField<T> field) {
-    List<String> valueStrs = configSrc.getProperty("celements.search.web.defaultValue."
-        + field.getName(), ImmutableList.<String>of());
-    return FluentIterable.from(valueStrs).transform(field.getMarshaller().getResolver()).filter(
-        Predicates.notNull()).toList();
+    List<String> valueStrs = ConfigSourceUtils.getStringListProperty(
+        "celements.search.web.defaultValue." + field.getName());
+    return valueStrs.stream()
+        .map(field.getMarshaller().getResolver())
+        .filter(Objects::nonNull)
+        .collect(toList());
   }
 
   private IQueryRestriction getRestrPackages(Collection<WebSearchPackage> searchPackages) {
