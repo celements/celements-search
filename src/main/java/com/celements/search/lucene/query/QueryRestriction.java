@@ -243,7 +243,7 @@ public class QueryRestriction implements IQueryRestriction {
       }
       StringBuilder finalQuery = new StringBuilder();
       for (String term : queryString.split(" ")) {
-        if (!finalQuery.isEmpty()) {
+        if (finalQuery.length() > 0) {
           finalQuery.append(" AND ");
         }
         if (term.endsWith("*")) {
