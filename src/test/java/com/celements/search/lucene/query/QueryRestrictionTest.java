@@ -8,8 +8,7 @@ import org.junit.Test;
 public class QueryRestrictionTest {
 
   @Before
-  public void setUp_QueryRestrictionTest() throws Exception {
-  }
+  public void setUp_QueryRestrictionTest() throws Exception {}
 
   @Test
   public void testGetQueryString_nothingSet() {
@@ -207,5 +206,11 @@ public class QueryRestrictionTest {
     QueryRestriction restr = new QueryRestriction("XWiki.XWikiUsers.first_name", "Hans Peter");
     restr.setBoost(8000.01f);
     assertEquals("XWiki.XWikiUsers.first_name:(+Hans* +Peter*)^8000.01", restr.getQueryString());
+  }
+
+  @Test
+  public void test_QueryRestrictionStringString() {
+    QueryRestriction restr = new QueryRestriction("XWiki.XWikiUsers.first_name", "Hans Peter");
+    assertEquals("XWiki.XWikiUsers.first_name:(+Hans* +Peter*)", restr.getQueryString());
   }
 }

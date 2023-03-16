@@ -1,5 +1,6 @@
 package com.celements.search.lucene;
 
+import static com.celements.common.test.CelementsTestUtils.*;
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
 
@@ -16,7 +17,8 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 
-import com.celements.common.test.AbstractBridgedComponentTestCase;
+import com.celements.common.test.AbstractComponentTest;
+import com.celements.search.lucene.index.analysis.CelementsSimpleAnalyzer;
 import com.celements.search.lucene.query.IQueryRestriction;
 import com.celements.search.lucene.query.LuceneQuery;
 import com.celements.search.lucene.query.QueryRestriction;
@@ -28,68 +30,91 @@ import com.xpn.xwiki.plugin.lucene.IndexFields;
 import com.xpn.xwiki.plugin.lucene.LucenePlugin;
 import com.xpn.xwiki.web.Utils;
 
-public class LuceneSearchServiceTest extends AbstractBridgedComponentTestCase {
+public class LuceneSearchServiceTest extends AbstractComponentTest {
 
   private ILuceneSearchService searchService;
   private XWiki xwiki;
   private XWikiContext context;
+  private LucenePlugin plugin;
 
   @Before
-  public void setUp_LuceneSearchServiceTest() throws Exception {
+  public void prepare() throws Exception {
     xwiki = getWikiMock();
     context = getContext();
+    plugin = createMockAndAddToDefault(LucenePlugin.class);
+    expect(xwiki.getPlugin(eq("lucene"), same(getContext()))).andReturn(plugin).anyTimes();
     searchService = Utils.getComponent(ILuceneSearchService.class);
   }
 
   @Test
-  public void testCreateQuery() {
+  public void test_createQuery() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     LuceneQuery query = searchService.createQuery();
     assertNotNull(query);
     assertEquals("(type:(+\"wikipage\") AND wiki:(+\"xwikidb\"))", query.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateQuery_nullType() {
+  public void test_createQuery_nullType() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     LuceneQuery query = searchService.createQuery(null);
     assertNotNull(query);
     assertEquals("((type:(+\"wikipage\") OR type:(+\"attachment\")) " + "AND wiki:(+\"xwikidb\"))",
         query.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateQuery_noType() {
+  public void test_createQuery_noType() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     LuceneQuery query = searchService.createQuery(Collections.<String>emptyList());
     assertNotNull(query);
     assertEquals("((type:(+\"wikipage\") OR type:(+\"attachment\")) " + "AND wiki:(+\"xwikidb\"))",
         query.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateQuery_multiType() {
+  public void test_createQuery_multiType() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     LuceneQuery query = searchService.createQuery(Arrays.asList("wikipage", "attachment"));
     assertNotNull(query);
     assertEquals("((type:(+\"wikipage\") OR type:(+\"attachment\")) " + "AND wiki:(+\"xwikidb\"))",
         query.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateAndRestrictionGroup() {
+  public void test_createAndRestrictionGroup() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestrictionGroup restrGrp = searchService.createRestrictionGroup(Type.AND);
     assertNotNull(restrGrp);
     assertEquals(Type.AND, restrGrp.getType());
     assertEquals(0, restrGrp.size());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateOrRestrictionGroup() {
+  public void test_createOrRestrictionGroup() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestrictionGroup restrGrp = searchService.createRestrictionGroup(Type.OR);
     assertNotNull(restrGrp);
     assertEquals(Type.OR, restrGrp.getType());
     assertEquals(0, restrGrp.size());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateRestrictionGroup() {
+  public void test_createRestrictionGroup() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     List<String> fields = Arrays.asList("field1", "field2", "field3");
     List<String> values = Arrays.asList("value1", "value2", "value3");
     QueryRestrictionGroup restrGrp = searchService.createRestrictionGroup(Type.AND, fields, values);
@@ -98,10 +123,13 @@ public class LuceneSearchServiceTest extends AbstractBridgedComponentTestCase {
     assertEquals(3, restrGrp.size());
     assertEquals("(field1:(+value1*) AND field2:(+value2*) AND field3:(+value3*))",
         restrGrp.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateRestrictionGroup_oneField() {
+  public void test_createRestrictionGroup_oneField() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     List<String> fields = Arrays.asList("field");
     List<String> values = Arrays.asList("value1", "value2", "value3");
     QueryRestrictionGroup restrGrp = searchService.createRestrictionGroup(Type.OR, fields, values);
@@ -110,10 +138,13 @@ public class LuceneSearchServiceTest extends AbstractBridgedComponentTestCase {
     assertEquals(3, restrGrp.size());
     assertEquals("(field:(+value1*) OR field:(+value2*) OR field:(+value3*))",
         restrGrp.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateRestrictionGroup_twoValues() {
+  public void test_createRestrictionGroup_twoValues() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     List<String> fields = Arrays.asList("field1", "field2", "field3");
     List<String> values = Arrays.asList("value1", "value2");
     QueryRestrictionGroup restrGrp = searchService.createRestrictionGroup(Type.AND, fields, values);
@@ -122,184 +153,267 @@ public class LuceneSearchServiceTest extends AbstractBridgedComponentTestCase {
     assertEquals(3, restrGrp.size());
     assertEquals("(field1:(+value1*) AND field2:(+value2*) AND field3:(+value2*))",
         restrGrp.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateRestriction() {
+  public void test_createRestriction() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestriction restr = searchService.createRestriction("XWiki.XWikiUsers." + "first_name",
         "Hans");
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.first_name:(+Hans*)", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateRestriction_false_true() {
+  public void test_createRestriction_false_true() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestriction restr = searchService.createRestriction("XWiki.XWikiUsers." + "first_name",
         "Hans", false, true);
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.first_name:(Hans~)", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateRestriction_nullField() {
+  public void test_createRestriction_nullField() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     assertEquals("", searchService.createRestriction((String) null, "Hans").getQueryString());
     assertEquals("", searchService.createRestriction("", "Hans").getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateRestriction_nullVal() {
+  public void test_createRestriction_nullVal() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     assertEquals("", searchService.createRestriction("Hans", null).getQueryString());
     assertEquals("", searchService.createRestriction("Hans", "").getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateSpaceRestriction() {
+  public void test_createRestriction_withAnalyzer() {
+    try (CelementsSimpleAnalyzer analyzer = new CelementsSimpleAnalyzer(LucenePlugin.VERSION)) {
+      expect(plugin.getAnalyzer()).andReturn(analyzer).anyTimes();
+      replayDefault();
+      assertEquals("Field:(hansoe)",
+          searchService.createRestriction("Field", "Hänsôè", false).getQueryString());
+      assertEquals("Field:(+hansoe*)",
+          searchService.createRestriction("Field", "Hänsôè", true).getQueryString());
+      assertEquals("", searchService.createRestriction("Field", "und", false).getQueryString());
+      assertEquals("", searchService.createRestriction("Field", "und", true).getQueryString());
+      assertEquals("", searchService.createRestriction("Field", "and", false).getQueryString());
+      assertEquals("", searchService.createRestriction("Field", "and", true).getQueryString());
+      verifyDefault();
+    }
+  }
+
+  @Test
+  public void test_createSpaceRestriction() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestriction restr = searchService.createSpaceRestriction(new SpaceReference("spaceName",
         new WikiReference("wiki")));
     assertNotNull(restr);
     assertEquals("space:(+\"spaceName\")", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateFieldRestriction() {
+  public void test_createFieldRestriction() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     DocumentReference classRef = new DocumentReference("db", "ClassSpace", "MyClass");
     QueryRestriction restr = searchService.createFieldRestriction(classRef, "someField",
         "val1 val2");
     assertNotNull(restr);
     assertEquals("ClassSpace.MyClass.someField:(+val1* +val2*)", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateFieldRestriction_notTokenized() {
+  public void test_createFieldRestriction_notTokenized() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     DocumentReference classRef = new DocumentReference("db", "ClassSpace", "MyClass");
     QueryRestriction restr = searchService.createFieldRestriction(classRef, "someField",
         "val1 val2", false);
     assertNotNull(restr);
     assertEquals("ClassSpace.MyClass.someField:(val1 val2)", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateFieldRestriction_nullClassRef() {
+  public void test_createFieldRestriction_nullClassRef() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestriction restr = searchService.createFieldRestriction(null, "someField", "val");
     assertNull(restr);
+    verifyDefault();
   }
 
   @Test
-  public void testCreateFieldRestriction_emptyField() {
+  public void test_createFieldRestriction_emptyField() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     DocumentReference classRef = new DocumentReference("db", "ClassSpace", "MyClass");
     QueryRestriction restr = searchService.createFieldRestriction(classRef, "", "val");
     assertNull(restr);
+    verifyDefault();
   }
 
   @Test
-  public void testCreateFieldRefRestriction() {
+  public void test_createFieldRefRestriction() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     DocumentReference classRef = new DocumentReference("db", "ClassSpace", "MyClass");
     EntityReference ref = new DocumentReference("db", "ToSpace", "ToPage");
     IQueryRestriction restr = searchService.createFieldRefRestriction(classRef, "ref", ref);
     assertNotNull(restr);
     assertEquals("(ClassSpace.MyClass.ref:(+\"db\\:ToSpace.ToPage\") OR "
         + "ClassSpace.MyClass.ref:(+\"ToSpace.ToPage\"))", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateFieldRefRestriction_otherdb() {
+  public void test_createFieldRefRestriction_otherdb() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     DocumentReference classRef = new DocumentReference("db", "ClassSpace", "MyClass");
     EntityReference ref = new DocumentReference("otherdb", "ToSpace", "ToPage");
     IQueryRestriction restr = searchService.createFieldRefRestriction(classRef, "ref", ref);
     assertNotNull(restr);
     assertEquals("ClassSpace.MyClass.ref:(+\"otherdb\\:ToSpace.ToPage\")", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
   public void testRangeRestriction() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestriction restr = searchService.createRangeRestriction("XWiki."
         + "XWikiUsers.first_name", "Hans", "Peter");
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.first_name:([Hans TO Peter])", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
   public void testRangeRestrictionExclusive() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestriction restr = searchService.createRangeRestriction("XWiki."
         + "XWikiUsers.first_name", "Hans", "Peter", false);
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.first_name:({Hans TO Peter})", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
   public void testRangeRestrictionInclusive() {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestriction restr = searchService.createRangeRestriction("XWiki."
         + "XWikiUsers.first_name", "Hans", "Peter", true);
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.first_name:([Hans TO Peter])", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateDateRestriction() throws Exception {
+  public void test_createDateRestriction() throws Exception {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     Date date = IndexFields.stringToDate("199001151213");
     QueryRestriction restr = searchService.createDateRestriction("XWiki." + "XWikiUsers.date",
         date);
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.date:(199001151213)", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateFromToDateRestriction() throws Exception {
+  public void test_createFromToDateRestriction() throws Exception {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     Date fromDate = IndexFields.stringToDate("111111111111");
     Date toDate = IndexFields.stringToDate("199001151213");
     QueryRestriction restr = searchService.createFromToDateRestriction("XWiki." + "XWikiUsers.date",
         fromDate, toDate, true);
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.date:([111111111111 TO 199001151213])", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateToDateRestriction() throws Exception {
+  public void test_createToDateRestriction() throws Exception {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     Date toDate = IndexFields.stringToDate("199001151213");
     QueryRestriction restr = searchService.createToDateRestriction("XWiki." + "XWikiUsers.date",
         toDate, true);
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.date:([000101010000 TO 199001151213])", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateFromDateRestriction() throws Exception {
+  public void test_createFromDateRestriction() throws Exception {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     Date fromDate = IndexFields.stringToDate("111111111111");
     QueryRestriction restr = searchService.createFromDateRestriction("XWiki." + "XWikiUsers.date",
         fromDate, true);
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.date:([111111111111 TO 999912312359])", restr.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateAttachmentRestrictionGroup_mimetypes() throws Exception {
+  public void test_createAttachmentRestrictionGroup_mimetypes() throws Exception {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     List<String> mimetypes = Arrays.asList("application/pdf");
     QueryRestrictionGroup restrGrp = searchService.createAttachmentRestrictionGroup(mimetypes, null,
         null);
     assertNotNull(restrGrp);
     assertEquals("mimetype:(+\"application/pdf\")", restrGrp.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateAttachmentRestrictionGroup_mimetypesBlackList() throws Exception {
+  public void test_createAttachmentRestrictionGroup_mimetypesBlackList() throws Exception {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     List<String> mimetypesBlackList = Arrays.asList("text");
     QueryRestrictionGroup restrGrp = searchService.createAttachmentRestrictionGroup(null,
         mimetypesBlackList, null);
     assertNotNull(restrGrp);
     assertEquals("NOT mimetype:(+\"text\")", restrGrp.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateAttachmentRestrictionGroup_filenames() throws Exception {
+  public void test_createAttachmentRestrictionGroup_filenames() throws Exception {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     List<String> filenamePrefs = Arrays.asList("Asdf");
     QueryRestrictionGroup restrGrp = searchService.createAttachmentRestrictionGroup(null, null,
         filenamePrefs);
     assertNotNull(restrGrp);
     assertEquals("filename:(+Asdf*)", restrGrp.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateAttachmentRestrictionGroup_multi() throws Exception {
+  public void test_createAttachmentRestrictionGroup_multi() throws Exception {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     List<String> mimetypes = Arrays.asList("image", "application/pdf");
     List<String> mimetypesBlackList = Arrays.asList("text", "video");
     List<String> filenamePrefs = Arrays.asList("Asdf", "Fdsa");
@@ -309,30 +423,35 @@ public class LuceneSearchServiceTest extends AbstractBridgedComponentTestCase {
     assertEquals("((mimetype:(+\"image\") OR mimetype:(+\"application/pdf\")) "
         + "AND NOT (mimetype:(+\"text\") OR mimetype:(+\"video\")) "
         + "AND (filename:(+Asdf*) OR filename:(+Fdsa*)))", restrGrp.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateAttachmentRestrictionGroup_empty() throws Exception {
+  public void test_createAttachmentRestrictionGroup_empty() throws Exception {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestrictionGroup restrGrp = searchService.createAttachmentRestrictionGroup(
         new ArrayList<String>(), new ArrayList<String>(), new ArrayList<String>());
     assertNotNull(restrGrp);
     assertEquals("", restrGrp.getQueryString());
+    verifyDefault();
   }
 
   @Test
-  public void testCreateAttachmentRestrictionGroup_null() throws Exception {
+  public void test_createAttachmentRestrictionGroup_null() throws Exception {
+    expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
+    replayDefault();
     QueryRestrictionGroup restrGrp = searchService.createAttachmentRestrictionGroup(null, null,
         null);
     assertNotNull(restrGrp);
     assertEquals("", restrGrp.getQueryString());
+    verifyDefault();
   }
 
   @Test
   public void testGetResultLimit() {
     int limit = 1234;
-    LucenePlugin pluginMock = createMockAndAddToDefault(LucenePlugin.class);
-    expect(xwiki.getPlugin(eq("lucene"), same(getContext()))).andReturn(pluginMock).once();
-    expect(pluginMock.getResultLimit(eq(false), same(context))).andReturn(limit).once();
+    expect(plugin.getResultLimit(eq(false), same(context))).andReturn(limit).once();
 
     replayDefault();
     int ret = searchService.getResultLimit();
@@ -344,9 +463,7 @@ public class LuceneSearchServiceTest extends AbstractBridgedComponentTestCase {
   @Test
   public void testGetResultLimit_skipChecks() {
     int limit = 1234;
-    LucenePlugin pluginMock = createMockAndAddToDefault(LucenePlugin.class);
-    expect(xwiki.getPlugin(eq("lucene"), same(getContext()))).andReturn(pluginMock).once();
-    expect(pluginMock.getResultLimit(eq(true), same(context))).andReturn(limit).once();
+    expect(plugin.getResultLimit(eq(true), same(context))).andReturn(limit).once();
 
     replayDefault();
     int ret = searchService.getResultLimit(true);

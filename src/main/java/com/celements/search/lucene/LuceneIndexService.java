@@ -19,7 +19,6 @@ import com.celements.model.access.exception.DocumentLoadException;
 import com.celements.model.access.exception.DocumentNotExistsException;
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
-import com.celements.model.util.References;
 import com.celements.search.lucene.index.queue.IndexQueuePriority;
 import com.celements.search.lucene.index.queue.QueueTask;
 import com.celements.search.lucene.index.rebuild.LuceneIndexRebuildService;
@@ -96,7 +95,7 @@ public class LuceneIndexService implements ILuceneIndexService {
 
   @Override
   public IndexRebuildFuture rebuildIndex(EntityReference ref) {
-    EntityReference filterRef = Optional.ofNullable(ref).map(References::cloneRef)
+    EntityReference filterRef = Optional.ofNullable(ref)
         .orElseGet(context::getWikiRef);
     LOGGER.info("rebuildIndex - start [{}]", defer(() -> modelUtils.serializeRef(filterRef)));
     return rebuildService.startIndexRebuild(filterRef);

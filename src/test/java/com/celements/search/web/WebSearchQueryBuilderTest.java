@@ -26,6 +26,7 @@ import com.celements.search.web.packages.WebSearchPackage;
 import com.google.common.collect.ImmutableSet;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
+import com.xpn.xwiki.plugin.lucene.LucenePlugin;
 import com.xpn.xwiki.web.Utils;
 
 public class WebSearchQueryBuilderTest extends AbstractComponentTest {
@@ -48,6 +49,10 @@ public class WebSearchQueryBuilderTest extends AbstractComponentTest {
   public void prepareTest() throws Exception {
     docRef = new DocumentReference("wiki", "space", "doc");
     getContext().setDatabase(docRef.getWikiReference().getName());
+    LucenePlugin lucenePlugin = createMockAndAddToDefault(LucenePlugin.class);
+    expect(getWikiMock().getPlugin(eq("lucene"), same(getContext())))
+        .andReturn(lucenePlugin).anyTimes();
+    expect(lucenePlugin.getAnalyzer()).andReturn(null).anyTimes();
     webSearchServiceMock = registerComponentMock(IWebSearchService.class);
     builder = Utils.getComponent(WebSearchQueryBuilder.class);
   }

@@ -1,5 +1,6 @@
 package com.celements.search.lucene;
 
+import static com.celements.common.MoreObjectsCel.*;
 import static com.celements.model.util.ReferenceSerializationMode.*;
 import static com.celements.search.lucene.LuceneUtils.*;
 import static com.google.common.base.MoreObjects.*;
@@ -38,6 +39,7 @@ import com.celements.model.classes.fields.ClassField;
 import com.celements.model.classes.fields.CustomClassField;
 import com.celements.model.context.ModelContext;
 import com.celements.model.util.ModelUtils;
+import com.celements.search.lucene.index.analysis.CelAnalyzer;
 import com.celements.search.lucene.query.IQueryRestriction;
 import com.celements.search.lucene.query.LuceneDocType;
 import com.celements.search.lucene.query.LuceneQuery;
@@ -174,6 +176,9 @@ public class LuceneSearchService implements ILuceneSearchService {
   public QueryRestriction createRestriction(String field, String value, boolean tokenize,
       boolean fuzzy) {
     QueryRestriction restriction = new QueryRestriction(field, value, tokenize);
+    getLucenePlugin().map(LucenePlugin::getAnalyzer)
+        .flatMap(a -> tryCast(a, CelAnalyzer.class))
+        .ifPresent(restriction::setAnalyzer);
     return fuzzy ? restriction.setFuzzy() : restriction;
   }
 
