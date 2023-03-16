@@ -293,12 +293,12 @@ public class LuceneSearchService implements ILuceneSearchService {
     } else {
       value = "{" + value + "}";
     }
-    return createRestriction(field, value, false);
+    return createRestriction(field, value, false).setAnalyzer(null);
   }
 
   @Override
   public QueryRestriction createDateRestriction(String field, Date date) {
-    return createRestriction(field, IndexFields.dateToString(date), false);
+    return createRestriction(field, IndexFields.dateToString(date), false).setAnalyzer(null);
   }
 
   @Override
@@ -322,7 +322,7 @@ public class LuceneSearchService implements ILuceneSearchService {
 
   @Override
   public QueryRestriction createNumberRestriction(String field, Number number) {
-    return createRestriction(field, IndexFields.numberToString(number), false);
+    return createRestriction(field, IndexFields.numberToString(number), false).setAnalyzer(null);
   }
 
   @Override
