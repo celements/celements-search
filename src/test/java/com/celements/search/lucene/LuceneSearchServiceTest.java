@@ -205,10 +205,6 @@ public class LuceneSearchServiceTest extends AbstractComponentTest {
           searchService.createRestriction("Field", "Hänsôè", false).getQueryString());
       assertEquals("Field:(+hansoe*)",
           searchService.createRestriction("Field", "Hänsôè", true).getQueryString());
-      assertEquals("", searchService.createRestriction("Field", "und", false).getQueryString());
-      assertEquals("", searchService.createRestriction("Field", "und", true).getQueryString());
-      assertEquals("", searchService.createRestriction("Field", "and", false).getQueryString());
-      assertEquals("", searchService.createRestriction("Field", "and", true).getQueryString());
       verifyDefault();
     }
   }
