@@ -240,17 +240,19 @@ public class LuceneSearchScriptService implements ScriptService {
   }
 
   public QueueTask indexTask(EntityReference ref) {
-    if (rightsAccess.isLoggedIn() && rightsAccess.hasAccessLevel(ref, EAccessLevel.VIEW)) {
-      return indexService.indexTask(ref);
-    }
-    return null;
+    return checkRights(ref, EAccessLevel.VIEW) ? indexService.indexTask(ref) : null;
   }
 
   public QueueTask deleteTask(EntityReference ref) {
-    if (rightsAccess.isLoggedIn() && rightsAccess.hasAccessLevel(ref, EAccessLevel.EDIT)) {
-      return indexService.deleteTask(ref);
-    }
-    return null;
+    return checkRights(ref, EAccessLevel.EDIT) ? indexService.deleteTask(ref) : null;
+  }
+
+  private boolean checkRights(EntityReference ref, EAccessLevel lvl) {
+    return (ref != null) && (rightsAccess.isSuperAdmin()
+        || (rightsAccess.isAdmin() && context.getWikiRef()
+            .equals(ref.extractRef(WikiReference.class).orElse(null)))
+        || (rightsAccess.isLoggedIn() && (ref.getType().ordinal() > 1)
+            && rightsAccess.hasAccessLevel(ref, lvl)));
   }
 
   public long getQueueSize() {
