@@ -9,8 +9,8 @@ import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 import org.xwiki.context.Execution;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
-import org.xwiki.model.reference.ImmutableDocumentReference;
 import org.xwiki.observation.ObservationManager;
 
 import com.celements.common.test.AbstractComponentTest;
@@ -33,7 +33,7 @@ public class LuceneIndexServiceTest extends AbstractComponentTest {
   public void prepareTest() throws Exception {
     observationManagerMock = registerComponentMock(ObservationManager.class);
     service = (LuceneIndexService) Utils.getComponent(ILuceneIndexService.class);
-    ref = new ImmutableDocumentReference("wiki", "space", "doc");
+    ref = new DocumentReference("wiki", "space", "doc");
   }
 
   @Test
