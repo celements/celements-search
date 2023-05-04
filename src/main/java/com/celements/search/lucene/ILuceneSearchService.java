@@ -134,6 +134,9 @@ public interface ILuceneSearchService {
   public QueryRestriction createFromToDateRestriction(String field, Date fromDate, Date toDate,
       boolean inclusive);
 
+  public QueryRestrictionGroup createFromToDateRestriction(String startField, String endField,
+      Date fromDate, Date toDate, boolean inclusive);
+
   public QueryRestriction createNumberRestriction(String field, Number number);
 
   public QueryRestriction createFromToNumberRestriction(String field, Number fromNumber,

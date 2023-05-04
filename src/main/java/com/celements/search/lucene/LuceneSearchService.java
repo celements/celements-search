@@ -321,6 +321,15 @@ public class LuceneSearchService implements ILuceneSearchService {
   }
 
   @Override
+  public QueryRestrictionGroup createFromToDateRestriction(String startField, String endField,
+      Date fromDate, Date toDate, boolean inclusive) {
+    QueryRestrictionGroup grp = createRestrictionGroup(Type.AND);
+    grp.add(createFromDateRestriction(endField, fromDate, inclusive));
+    grp.add(createToDateRestriction(startField, toDate, inclusive));
+    return grp;
+  }
+
+  @Override
   public QueryRestriction createNumberRestriction(String field, Number number) {
     return createRestriction(field, IndexFields.numberToString(number), false).setAnalyzer(null);
   }

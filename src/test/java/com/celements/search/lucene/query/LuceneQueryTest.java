@@ -100,16 +100,16 @@ public class LuceneQueryTest extends AbstractComponentTest {
 
   @Test
   public void testGetQueryString_otherDB() {
-    query.setWiki(new WikiReference("theWiki"));
-    String queryString = "wiki:(+\"theWiki\")";
+    query.setWiki(new WikiReference("otherwiki"));
+    String queryString = "wiki:(+\"otherwiki\")";
     assertEquals(queryString, query.getQueryString());
     assertEquals("queryString must stay the same", queryString, query.getQueryString());
   }
 
   @Test
   public void testGetQueryString_multiDBs() {
-    query.setWikis(Arrays.asList(new WikiReference("theWiki1"), new WikiReference("theWiki2")));
-    String queryString = "(wiki:(+\"theWiki1\") OR wiki:(+\"theWiki2\"))";
+    query.setWikis(Arrays.asList(new WikiReference("wiki1"), new WikiReference("wiki2")));
+    String queryString = "(wiki:(+\"wiki1\") OR wiki:(+\"wiki2\"))";
     assertEquals(queryString, query.getQueryString());
     assertEquals("queryString must stay the same", queryString, query.getQueryString());
   }
