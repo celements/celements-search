@@ -1,12 +1,15 @@
 package com.celements.search.lucene;
 
 import static com.celements.common.MoreObjectsCel.*;
+import static com.celements.common.date.DateUtil.*;
+import static com.celements.common.range.MoreRange.*;
 import static com.celements.model.util.ReferenceSerializationMode.*;
 import static com.celements.search.lucene.LuceneUtils.*;
 import static com.google.common.base.MoreObjects.*;
 import static java.util.stream.Collectors.*;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,7 +50,9 @@ import com.celements.search.lucene.query.QueryRestriction;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.celements.search.lucene.query.QueryRestrictionString;
+import com.google.common.collect.BoundType;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.IndexFields;
@@ -280,52 +285,78 @@ public class LuceneSearchService implements ILuceneSearchService {
   }
 
   @Override
+  @Deprecated
   public QueryRestriction createRangeRestriction(String field, String from, String to) {
     return createRangeRestriction(field, from, to, true);
   }
 
   @Override
+  @Deprecated
   public QueryRestriction createRangeRestriction(String field, String from, String to,
       boolean inclusive) {
-    String value = from + " TO " + to;
-    if (inclusive) {
-      value = "[" + value + "]";
-    } else {
-      value = "{" + value + "}";
-    }
+    return createRangeRestriction(field, asRange(from, to,
+        inclusive ? BoundType.CLOSED : BoundType.OPEN));
+  }
+
+  @Override
+  public QueryRestriction createRangeRestriction(String field, Range<String> range) {
+    String value = ""
+        + (range.hasLowerBound() && (range.lowerBoundType() == BoundType.OPEN) ? "{" : "[")
+        + (range.hasLowerBound() ? range.lowerEndpoint() : "0")
+        + " TO "
+        + (range.hasUpperBound() ? range.upperEndpoint() : "zzzzzzzzzzzz")
+        + (range.hasUpperBound() && (range.upperBoundType() == BoundType.OPEN) ? "}" : "]");
     return createRestriction(field, value, false).setAnalyzer(null);
   }
 
   @Override
+  @Deprecated
   public QueryRestriction createDateRestriction(String field, Date date) {
     return createRestriction(field, IndexFields.dateToString(date), false).setAnalyzer(null);
   }
 
   @Override
+  public QueryRestriction createDateRestriction(String field, LocalDateTime date) {
+    return createRestriction(field, IndexFields.DATE_FORMATTER.apply(date), false)
+        .setAnalyzer(null);
+  }
+
+  @Override
+  @Deprecated
   public QueryRestriction createFromDateRestriction(String field, Date fromDate,
       boolean inclusive) {
     return createFromToDateRestriction(field, fromDate, null, inclusive);
   }
 
   @Override
+  @Deprecated
   public QueryRestriction createToDateRestriction(String field, Date toDate, boolean inclusive) {
     return createFromToDateRestriction(field, null, toDate, inclusive);
   }
 
   @Override
+  @Deprecated
   public QueryRestriction createFromToDateRestriction(String field, Date fromDate, Date toDate,
       boolean inclusive) {
-    String from = (fromDate != null) ? IndexFields.dateToString(fromDate) : DATE_LOW;
-    String to = (toDate != null) ? IndexFields.dateToString(toDate) : DATE_HIGH;
-    return createRangeRestriction(field, from, to, inclusive);
+    return createDateRangeRestriction(field, asRange(toDateTime(fromDate), toDateTime(toDate),
+        inclusive ? BoundType.CLOSED : BoundType.OPEN));
+  }
+
+  private LocalDateTime toDateTime(Date date) {
+    return (date != null) ? atZone(date.toInstant()).toLocalDateTime() : null;
   }
 
   @Override
-  public QueryRestrictionGroup createFromToDateRestriction(String startField, String endField,
-      Date fromDate, Date toDate, boolean inclusive) {
+  public QueryRestriction createDateRangeRestriction(String field, Range<LocalDateTime> range) {
+    return createRangeRestriction(field, mapRange(range, IndexFields.DATE_FORMATTER));
+  }
+
+  @Override
+  public QueryRestrictionGroup createDateRangeRestriction(String startField, String endField,
+      Range<LocalDateTime> range) {
     QueryRestrictionGroup grp = createRestrictionGroup(Type.AND);
-    grp.add(createFromDateRestriction(endField, fromDate, inclusive));
-    grp.add(createToDateRestriction(startField, toDate, inclusive));
+    grp.add(createDateRangeRestriction(endField, withoutUpperBound(range)));
+    grp.add(createDateRangeRestriction(startField, withoutLowerBound(range)));
     return grp;
   }
 
@@ -335,11 +366,18 @@ public class LuceneSearchService implements ILuceneSearchService {
   }
 
   @Override
+  @Deprecated
   public QueryRestriction createFromToNumberRestriction(String field, Number fromNumber,
       Number toNumber, boolean inclusive) {
     String from = IndexFields.numberToString(firstNonNull(fromNumber, Integer.valueOf(0)));
     String to = IndexFields.numberToString(firstNonNull(toNumber, Integer.MAX_VALUE));
     return createRangeRestriction(field, from, to, inclusive);
+  }
+
+  @Override
+  public QueryRestriction createNumberRangeRestriction(String field,
+      Range<? extends Number> range) {
+    return createRangeRestriction(field, mapRange(range, IndexFields::numberToString));
   }
 
   @Override

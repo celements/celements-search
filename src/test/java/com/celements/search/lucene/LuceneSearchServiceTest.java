@@ -4,6 +4,7 @@ import static com.celements.common.test.CelementsTestUtils.*;
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +18,7 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
 
+import com.celements.common.date.DateFormat;
 import com.celements.common.test.AbstractComponentTest;
 import com.celements.search.lucene.index.analysis.CelementsSimpleAnalyzer;
 import com.celements.search.lucene.query.IQueryRestriction;
@@ -325,9 +327,9 @@ public class LuceneSearchServiceTest extends AbstractComponentTest {
   public void test_createDateRestriction() throws Exception {
     expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
     replayDefault();
-    Date date = IndexFields.stringToDate("199001151213");
+    Instant date = IndexFields.DATE_PARSER.apply("199001151213").toInstant();
     QueryRestriction restr = searchService.createDateRestriction("XWiki." + "XWikiUsers.date",
-        date);
+        Date.from(date));
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.date:(199001151213)", restr.getQueryString());
     verifyDefault();
@@ -337,10 +339,10 @@ public class LuceneSearchServiceTest extends AbstractComponentTest {
   public void test_createFromToDateRestriction() throws Exception {
     expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
     replayDefault();
-    Date fromDate = IndexFields.stringToDate("111111111111");
-    Date toDate = IndexFields.stringToDate("199001151213");
+    Instant fromDate = IndexFields.DATE_PARSER.apply("111111111111").toInstant();
+    Instant toDate = IndexFields.DATE_PARSER.apply("199001151213").toInstant();
     QueryRestriction restr = searchService.createFromToDateRestriction("XWiki." + "XWikiUsers.date",
-        fromDate, toDate, true);
+        Date.from(fromDate), Date.from(toDate), true);
     assertNotNull(restr);
     assertEquals("XWiki.XWikiUsers.date:([111111111111 TO 199001151213])", restr.getQueryString());
     verifyDefault();
@@ -350,11 +352,11 @@ public class LuceneSearchServiceTest extends AbstractComponentTest {
   public void test_createToDateRestriction() throws Exception {
     expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
     replayDefault();
-    Date toDate = IndexFields.stringToDate("199001151213");
+    Instant date = IndexFields.DATE_PARSER.apply("199001151213").toInstant();
     QueryRestriction restr = searchService.createToDateRestriction("XWiki." + "XWikiUsers.date",
-        toDate, true);
+        Date.from(date), true);
     assertNotNull(restr);
-    assertEquals("XWiki.XWikiUsers.date:([000101010000 TO 199001151213])", restr.getQueryString());
+    assertEquals("XWiki.XWikiUsers.date:([0 TO 199001151213])", restr.getQueryString());
     verifyDefault();
   }
 
@@ -362,11 +364,11 @@ public class LuceneSearchServiceTest extends AbstractComponentTest {
   public void test_createFromDateRestriction() throws Exception {
     expect(plugin.getAnalyzer()).andReturn(null).anyTimes();
     replayDefault();
-    Date fromDate = IndexFields.stringToDate("111111111111");
+    Instant date = DateFormat.parser(IndexFields.DATE_FORMAT).apply("199001151213").toInstant();
     QueryRestriction restr = searchService.createFromDateRestriction("XWiki." + "XWikiUsers.date",
-        fromDate, true);
+        Date.from(date), true);
     assertNotNull(restr);
-    assertEquals("XWiki.XWikiUsers.date:([111111111111 TO 999912312359])", restr.getQueryString());
+    assertEquals("XWiki.XWikiUsers.date:([199001151213 TO zzzzzzzzzzzz])", restr.getQueryString());
     verifyDefault();
   }
 

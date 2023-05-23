@@ -2,7 +2,11 @@ package com.celements.search.lucene;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.Temporal;
 import java.util.Date;
 import java.util.List;
 
@@ -28,6 +32,7 @@ import com.celements.search.lucene.query.QueryRestriction;
 import com.celements.search.lucene.query.QueryRestrictionGroup;
 import com.celements.search.lucene.query.QueryRestrictionGroup.Type;
 import com.celements.search.lucene.query.QueryRestrictionString;
+import com.google.common.collect.Range;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.plugin.lucene.IndexFields;
 
@@ -123,30 +128,73 @@ public interface ILuceneSearchService {
   public IQueryRestriction createFieldRefRestriction(DocumentReference classRef, String field,
       EntityReference ref);
 
+  /**
+   * @deprecated since 6.0 instead use {@link #createRangeRestriction(String, Range)}
+   */
+  @Deprecated
   public QueryRestriction createRangeRestriction(String field, String from, String to);
 
+  /**
+   * @deprecated since 6.0 instead use {@link #createRangeRestriction(String, Range)}
+   */
+  @Deprecated
   public QueryRestriction createRangeRestriction(String field, String from, String to,
       boolean inclusive);
 
+  @NotNull
+  public QueryRestriction createRangeRestriction(@Nullable String field,
+      @NotNull Range<String> range);
+
+  /**
+   * @deprecated since 6.0 instead use {@link #createDateRestriction(String, LocalDateTime)}
+   */
+  @Deprecated
   public QueryRestriction createDateRestriction(String field, Date date);
 
+  @NotNull
+  public QueryRestriction createDateRestriction(@Nullable String field,
+      @NotNull LocalDateTime date);
+
+  /**
+   * @deprecated since 6.0 instead use {@link #createDateRangeRestriction(String, Range)}
+   */
+  @Deprecated
   public QueryRestriction createFromDateRestriction(String field, Date fromDate, boolean inclusive);
 
+  /**
+   * @deprecated since 6.0 instead use {@link #createDateRangeRestriction(String, Range)}
+   */
+  @Deprecated
   public QueryRestriction createToDateRestriction(String field, Date toDate, boolean inclusive);
 
+  /**
+   * @deprecated since 6.0 instead use {@link #createDateRangeRestriction(String, Range)}
+   */
+  @Deprecated
   public QueryRestriction createFromToDateRestriction(String field, Date fromDate, Date toDate,
       boolean inclusive);
 
   @NotNull
-  public QueryRestrictionGroup createFromToDateRestriction(
+  public QueryRestriction createDateRangeRestriction(@Nullable String field,
+      @NotNull Range<LocalDateTime> range);
+
+  @NotNull
+  public QueryRestrictionGroup createDateRangeRestriction(
       @Nullable String startField, @Nullable String endField,
-      @Nullable Date fromDate,@Nullable Date toDate,
-      boolean inclusive);
+      @NotNull Range<LocalDateTime> range);
 
   public QueryRestriction createNumberRestriction(String field, Number number);
 
+  /**
+   * @deprecated since 6.0 instead use {@link #createNumberRangeRestriction(String, Range)}
+   */
+  @Deprecated
   public QueryRestriction createFromToNumberRestriction(String field, Number fromNumber,
       Number toNumber, boolean inclusive);
+
+  @NotNull
+  public QueryRestriction createNumberRangeRestriction(@Nullable String field,
+      @NotNull Range<? extends Number> range);
 
   public QueryRestrictionGroup createAttachmentRestrictionGroup(List<String> mimeTypes,
       List<String> mimeTypesBlackList, List<String> filenamePrefs);
